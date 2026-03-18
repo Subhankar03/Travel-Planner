@@ -12,10 +12,16 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.text import Text
 from rich.traceback import install
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter, Completer, Completion
+from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.styles import Style
 
 install()
 
-from graph import build_graph
+from agent import build_graph
+
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 NODE_STYLES = {
@@ -28,6 +34,7 @@ NODE_STYLES = {
 
 COMMANDS = {
     '/help': 'Show available commands',
+    '/trace': 'Show the agent trace for the last query',
     '/clear': 'Clear conversation history',
     '/exit': 'Exit the CLI (also: /quit)',
     '/quit': 'Exit the CLI',
@@ -61,18 +68,19 @@ def print_help(console: Console) -> None:
     console.print(Panel(lines, title='[bold]Commands[/]', border_style='dim', padding=(1, 2)))
 
 
-def print_node_trace(console: Console, node_name: str) -> None:
-    """Print a styled node trace line."""
+def format_node_trace(node_name: str) -> str:
+    """Format a styled node trace line."""
     icon, style = NODE_STYLES.get(node_name, ('⚙️', 'dim'))
-    console.print(f'  {icon} [dim]→[/] [{style}]{node_name}[/]')
+    return f'  {icon} [dim]→[/] [{style}]{node_name}[/]'
 
 
-def print_tool_result(console: Console, msg: ToolMessage) -> None:
-    """Print a condensed tool result."""
+def format_tool_result(msg: ToolMessage) -> str:
+    """Format a condensed tool result."""
     name = msg.name or 'tool'
     # Show just the first 120 chars to keep it brief
     content_preview = (msg.content[:120] + '…') if len(msg.content) > 120 else msg.content
-    console.print(f'    [dim]↳ {name}:[/] [dim italic]{content_preview}[/]')
+    escaped_preview = content_preview.replace('[', r'\[')
+    return f'    [dim]↳ {name}:[/] [dim italic]{escaped_preview}[/]'
 
 
 def print_response(console: Console, content: str) -> None:
@@ -81,11 +89,24 @@ def print_response(console: Console, content: str) -> None:
     console.print(Panel(md, title='[bold green]🤖 Agent[/]', border_style='green', padding=(1, 2)))
 
 
+class SlashCommandCompleter(Completer):
+    """Complete commands only when input starts with `/` and contains no spaces."""
+    def __init__(self, commands: list[str]) -> None:
+        self.word_completer = WordCompleter(commands, ignore_case=True, WORD=True)
+
+    def get_completions(self, document: Document, complete_event) -> list[Completion]:
+        text_before_cursor = document.text_before_cursor
+        # Only trigger if the input starts with '/' and is a single word
+        if text_before_cursor.startswith('/') and ' ' not in text_before_cursor:
+            yield from self.word_completer.get_completions(document, complete_event)
+
+
 # ── Main Loop ──────────────────────────────────────────────────────────────────
 def main() -> None:
     """Run the interactive CLI loop."""
     console = Console()
     messages: list = []
+    last_trace: list = []
 
     print_welcome(console)
 
@@ -94,10 +115,29 @@ def main() -> None:
         graph = build_graph()
     console.print('[green]✓[/] Agents ready!\n')
 
+    # Setup auto-completion
+    commands = list(COMMANDS.keys())
+    completer = SlashCommandCompleter(commands)
+    
+    # Custom style for completion menu: very dim/darker gray text, no background for any item
+    custom_style = Style.from_dict({
+        'completion-menu': 'bg:default',
+        'completion-menu.completion': 'fg:#666666',
+        'completion-menu.completion.current': 'bold fg:default bg:black',
+        'scrollbar.button': 'bg:default',
+    })
+    
+    session = PromptSession(
+        completer=completer,
+        style=custom_style,
+        complete_while_typing=True
+    )
+    prompt_text = FormattedText([('bold ansibrightblue', '✈️  You ❯ ')])
+
     while True:
         # ── Input ──────────────────────────────────────────────────────────
         try:
-            user_input = console.input('[bold bright_blue]✈️  You ❯ [/]').strip()
+            user_input = session.prompt(prompt_text).strip()
         except (KeyboardInterrupt, EOFError):
             console.print('\n[dim]Goodbye! 👋[/]')
             break
@@ -116,25 +156,35 @@ def main() -> None:
         if user_input.lower() == '/help':
             print_help(console)
             continue
+        if user_input.lower() == '/trace':
+            if last_trace:
+                console.print(Rule('[dim]Agent Trace[/]', style='dim'))
+                for line in last_trace:
+                    console.print(line)
+                console.print(Rule(style='dim'))
+            else:
+                console.print('[yellow]No trace available from the last query.[/]\n')
+            continue
 
         # ── Run Graph ──────────────────────────────────────────────────────
         console.print()
         messages.append(HumanMessage(content=user_input))
 
-        console.print(Rule('[dim]Agent Trace[/]', style='dim'))
-
         final_ai_content: str | None = None
+        last_trace.clear()
 
         try:
-            with console.status('[bold green]✨ Thinking…', spinner='dots'):
+            with console.status('[bold green]✨ Thinking…', spinner='dots') as status:
                 for chunk in graph.stream(
                     {'messages': messages, 'itinerary': None},
                     stream_mode='updates',
                 ):
                     for node_name, node_output in chunk.items():
-                        # Print which node is running
-                        console.print_json  # no-op, just to break spinner
-                        print_node_trace(console, node_name)
+                        # Update status to show what node is running
+                        status.update(f'[bold green]✨ Thinking…[/] [dim](Current: {node_name})[/]')
+                        
+                        # Collect trace internally instead of printing
+                        last_trace.append(format_node_trace(node_name))
 
                         if not node_output or not isinstance(node_output, dict):
                             continue
@@ -143,15 +193,12 @@ def main() -> None:
                         node_messages = node_output.get('messages', [])
                         for msg in node_messages:
                             if isinstance(msg, ToolMessage):
-                                print_tool_result(console, msg)
+                                last_trace.append(format_tool_result(msg))
                             elif isinstance(msg, AIMessage) and msg.text:
                                 final_ai_content = msg.text
         except Exception:
             console.print_exception(show_locals=False)
-            console.print(Rule(style='dim'))
             continue
-
-        console.print(Rule(style='dim'))
 
         # ── Display Response ───────────────────────────────────────────────
         if final_ai_content:

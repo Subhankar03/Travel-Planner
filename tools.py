@@ -1,7 +1,6 @@
 """SerpAPI-backed tools for the Travel Planner agent."""
 import json
 import os
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import serpapi
@@ -26,34 +25,6 @@ def _load_schema(engine: str) -> dict:
     return {}
 
 
-# ── Date Helper ────────────────────────────────────────────────────────────────
-def resolve_date(date_str: str) -> str:
-    """Resolve a date string to YYYY-MM-DD format.
-
-    Accepts absolute dates (2026-03-20) or relative expressions
-    like 'today', 'tomorrow', '3 days later', 'next week', etc.
-    """
-    date_str = date_str.strip().lower()
-    today = datetime.now().date()
-
-    if date_str == 'today':
-        return today.isoformat()
-    if date_str == 'tomorrow':
-        return (today + timedelta(days=1)).isoformat()
-    if 'days later' in date_str or 'days from now' in date_str:
-        parts = date_str.split()
-        try:
-            n = int(parts[0])
-            return (today + timedelta(days=n)).isoformat()
-        except (ValueError, IndexError):
-            pass
-    if date_str == 'next week':
-        return (today + timedelta(weeks=1)).isoformat()
-
-    # Assume it's already YYYY-MM-DD
-    return date_str
-
-
 # ── Tools ──────────────────────────────────────────────────────────────────────
 @tool
 def search_flights(
@@ -73,8 +44,8 @@ def search_flights(
     Args:
         departure_id: Departure airport IATA code (e.g. 'CCU', 'DEL').
         arrival_id: Arrival airport IATA code (e.g. 'BLR', 'BOM').
-        outbound_date: Outbound date (YYYY-MM-DD or relative like 'tomorrow').
-        return_date: Return date (YYYY-MM-DD or relative). Required for round trips.
+        outbound_date: Outbound date (YYYY-MM-DD).
+        return_date: Return date (YYYY-MM-DD). Required for round trips.
         adults: Number of adults.
         travel_class: 1=Economy, 2=Premium Economy, 3=Business, 4=First.
         currency: Currency code (e.g. 'INR', 'USD').
@@ -101,7 +72,7 @@ def search_flights(
         'sort_by': str(sort_by),
     }
     if return_date and trip_type == 1:
-        params['return_date'] = resolve_date(return_date)
+        params['return_date'] = return_date
 
     results = _client.search(params)
 
@@ -135,8 +106,8 @@ def search_hotels(
 
     Args:
         query: Search query (e.g. 'hotels in Bangalore').
-        check_in_date: Check-in date (YYYY-MM-DD or relative).
-        check_out_date: Check-out date (YYYY-MM-DD or relative).
+        check_in_date: Check-in date (YYYY-MM-DD).
+        check_out_date: Check-out date (YYYY-MM-DD).
         adults: Number of adults.
         currency: Currency code (e.g. 'INR', 'USD').
         sort_by: 3=Lowest price, 8=Highest rating, 13=Most reviewed.
@@ -154,8 +125,8 @@ def search_hotels(
         'q': query,
         'hl': 'en',
         'gl': 'in',
-        'check_in_date': resolve_date(check_in_date),
-        'check_out_date': resolve_date(check_out_date),
+        'check_in_date': check_in_date,
+        'check_out_date': check_out_date,
         'adults': str(adults),
         'currency': currency,
     }

@@ -17,3 +17,6 @@ class TravelState(TypedDict):
 
     # Next agent to route to (set by Supervisor)
     next: str
+
+    # User's current location (injected via frontend)
+    user_location: str

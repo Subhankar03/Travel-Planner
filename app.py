@@ -5,10 +5,9 @@ warnings.filterwarnings('ignore', message='.*Pydantic V1 functionality.*')
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
 
-from graph import build_graph
+from agent import build_graph
 
 # ── Page Config ────────────────────────────────────────────────────────────────
-
 st.set_page_config(
     page_title='✈️ AI Travel Planner',
     page_icon='✈️',
@@ -16,7 +15,6 @@ st.set_page_config(
 )
 
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
-
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -105,7 +103,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Header ─────────────────────────────────────────────────────────────────────
-
 st.markdown("""
 <div class="header-container">
     <h1>✈️ AI Travel Planner</h1>
@@ -114,7 +111,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
-
 with st.sidebar:
     st.markdown('### 🛠️ Agent Capabilities')
     st.markdown(
@@ -144,6 +140,17 @@ with st.sidebar:
     )
 
 # ── Session State ──────────────────────────────────────────────────────────────
+if 'user_location' not in st.session_state:
+    with st.spinner('📍 Getting your location...'):
+        # This will fetch the user's location based on their IP/browser
+        loc_data = streamlit_js_eval(
+            js_expressions="fetch('https://ipinfo.io/json').then(r => r.json())",
+            key='loc_fetch'
+        )
+        if loc_data:
+            st.session_state.user_location = f"{loc_data.get('city', '')}, {loc_data.get('region', '')}"
+        else:
+            st.session_state.user_location = None
 
 if 'messages' not in st.session_state:
     st.session_state.messages = []
@@ -153,7 +160,6 @@ if 'graph' not in st.session_state:
         st.session_state.graph = build_graph()
 
 # ── Display Chat History ───────────────────────────────────────────────────────
-
 for msg in st.session_state.messages:
     role = 'user' if isinstance(msg, HumanMessage) else 'assistant'
     with st.chat_message(role):
@@ -162,7 +168,6 @@ for msg in st.session_state.messages:
         st.markdown(content)
 
 # ── Chat Input ─────────────────────────────────────────────────────────────────
-
 # Check for prefill from sidebar example buttons
 prefill = st.session_state.pop('prefill', None)
 user_input = st.chat_input('Where would you like to travel?') or prefill
@@ -181,6 +186,7 @@ if user_input:
             result = st.session_state.graph.invoke(
                 {
                     'messages': st.session_state.messages,
+                    'user_location': st.session_state.get('user_location'),
                     'itinerary': None,
                 },
             )

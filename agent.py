@@ -1,12 +1,19 @@
 """LangGraph multi-agent workflow for the Travel Planner."""
 from __future__ import annotations
 
+import requests
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import ToolNode
@@ -15,47 +22,46 @@ from state import TravelState
 from tools import search_flights, search_hotels, search_local_places
 
 load_dotenv()
-
-# ── Prompt Loader ──────────────────────────────────────────────────────────────
 _PROMPT_DIR = Path(__file__).parent / 'prompts'
 
 
-def _load_prompt(name: str) -> str:
-    """Load a prompt template from the prompts/ directory."""
-    path = _PROMPT_DIR / f'{name}.md'
-    text = path.read_text(encoding='utf-8')
-    return text.replace('{today}', str(datetime.now().date()))
-
-
-# ── Models ─────────────────────────────────────────────────────────────────────
-def _get_model():
-    """Instantiate the Gemini model via Vertex AI (ADC authentication)."""
-    return ChatGoogleGenerativeAI(
-        model='gemini-3.1-flash-lite-preview',
-        thinking_level="low",
-    )
+# ── Helpers ────────────────────────────────────────────────────────────────────
+@lru_cache(maxsize=1)
+def get_current_location() -> str:
+    """Get the user's current location via IP-based geolocation."""
+    try:
+        response = requests.get("https://ipinfo.io/json", headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        city = data.get("city", "Unknown City")
+        region = data.get("region", "Unknown Region")
+        return f"{city}, {region}"
+    except Exception:
+        return "Unknown Location"
 
 
 # ── Agent Nodes ────────────────────────────────────────────────────────────────
-MEMBERS = ['booking_agent', 'research_agent']
-
-
 def supervisor_node(state: TravelState) -> dict:
     """Supervisor decides which specialist agent should handle the request."""
-    model = _get_model()
-    system_prompt = _load_prompt('supervisor')
+    model = ChatGoogleGenerativeAI(model='gemini-3.1-flash-lite-preview')
+    system_template = (_PROMPT_DIR/'supervisor.md').read_text(encoding='utf-8')
 
     # Ask the model to choose the next agent
-    options = MEMBERS + ['FINISH']
-    routing_prompt = (
-        f'{system_prompt}\n\n'
+    routing_instructions = (
         f'Given the conversation above, who should act next?\n'
-        f'Choose one of: {options}\n'
+        f"Choose one of: 'booking_agent', 'research_agent', 'FINISH'\n"
         f'Respond with ONLY the name of the agent (or FINISH), nothing else.'
     )
 
-    messages = [SystemMessage(content=routing_prompt)] + state['messages']
-    response = model.invoke(messages)
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(system_template),
+        MessagesPlaceholder(variable_name="messages"),
+        SystemMessage(content=routing_instructions)
+    ])
+
+    response = model.invoke(prompt.invoke({
+        "messages": state['messages']
+    }))
 
     # Parse the response to get the next agent
     next_agent = response.text.strip().lower()
@@ -73,26 +79,45 @@ def supervisor_node(state: TravelState) -> dict:
 
 def booking_agent_node(state: TravelState) -> dict:
     """Booking agent: finds flights and hotels."""
-    model = _get_model()
-    tools = [search_flights, search_hotels]
-    model_with_tools = model.bind_tools(tools)
+    model = ChatGoogleGenerativeAI(model='gemini-3-flash-preview')
+    model_with_tools = model.bind_tools([search_flights, search_hotels])
 
-    system_prompt = _load_prompt('booking_agent')
-    messages = [SystemMessage(content=system_prompt)] + state['messages']
-    response = model_with_tools.invoke(messages)
+    system_template = (_PROMPT_DIR/'booking_agent.md').read_text(encoding='utf-8')
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(system_template),
+        MessagesPlaceholder(variable_name="messages")
+    ])
+    
+    # Identify user location (from state or IP fallback)
+    location = state.get('user_location') or get_current_location()
+
+    response = model_with_tools.invoke(prompt.invoke({
+        "today": datetime.now().strftime('%A, %Y-%m-%d'),
+        "location": location,
+        "messages": state['messages']
+    }))
 
     return {'messages': [response]}
 
 
 def research_agent_node(state: TravelState) -> dict:
     """Research agent: finds local restaurants and attractions."""
-    model = _get_model()
-    tools = [search_local_places]
-    model_with_tools = model.bind_tools(tools)
+    model = ChatGoogleGenerativeAI(model='gemini-3-flash-preview')
+    model_with_tools = model.bind_tools([search_local_places])
 
-    system_prompt = _load_prompt('research_agent')
-    messages = [SystemMessage(content=system_prompt)] + state['messages']
-    response = model_with_tools.invoke(messages)
+    system_template = (_PROMPT_DIR/'research_agent.md').read_text(encoding='utf-8')
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(system_template),
+        MessagesPlaceholder(variable_name="messages")
+    ])
+    # Identify user location (from state or IP fallback)
+    location = state.get('user_location') or get_current_location()
+
+    response = model_with_tools.invoke(prompt.invoke({
+        "today": datetime.now().strftime('%A, %Y-%m-%d'),
+        "location": location,
+        "messages": state['messages']
+    }))
 
     return {'messages': [response]}
 
