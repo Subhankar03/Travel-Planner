@@ -18,6 +18,9 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.styles import Style
 
+from collections.abc import Iterable
+from typing import Any, cast
+
 install()
 
 from agent import build_graph
@@ -78,7 +81,8 @@ def format_tool_result(msg: ToolMessage) -> str:
     """Format a condensed tool result."""
     name = msg.name or 'tool'
     # Show just the first 120 chars to keep it brief
-    content_preview = (msg.content[:120] + '…') if len(msg.content) > 120 else msg.content
+    content_str = str(msg.content)
+    content_preview = (content_str[:120] + '…') if len(content_str) > 120 else content_str
     escaped_preview = content_preview.replace('[', r'\[')
     return f'    [dim]↳ {name}:[/] [dim italic]{escaped_preview}[/]'
 
@@ -94,7 +98,7 @@ class SlashCommandCompleter(Completer):
     def __init__(self, commands: list[str]) -> None:
         self.word_completer = WordCompleter(commands, ignore_case=True, WORD=True)
 
-    def get_completions(self, document: Document, complete_event) -> list[Completion]:
+    def get_completions(self, document: Document, complete_event) -> Iterable[Completion]:
         text_before_cursor = document.text_before_cursor
         # Only trigger if the input starts with '/' and is a single word
         if text_before_cursor.startswith('/') and ' ' not in text_before_cursor:
@@ -176,7 +180,7 @@ def main() -> None:
         try:
             with console.status('[bold green]✨ Thinking…', spinner='dots') as status:
                 for chunk in graph.stream(
-                    {'messages': messages, 'itinerary': None},
+                    cast(Any, {'messages': messages, 'itinerary': None}),
                     stream_mode='updates',
                 ):
                     for node_name, node_output in chunk.items():

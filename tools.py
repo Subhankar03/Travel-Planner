@@ -2,61 +2,174 @@
 import json
 import os
 from pathlib import Path
+from typing import Literal
 
 import serpapi
 from langchain_core.tools import tool
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 load_dotenv()
-
-# ── SerpAPI Client ─────────────────────────────────────────────────────────────
 _client = serpapi.Client(api_key=os.getenv('SERPAPI_KEY'))
 
-# ── Schema Loader ──────────────────────────────────────────────────────────────
-_SCHEMA_DIR = Path(__file__).parent / 'serpapi_schemas'
+
+# ── Schema Data ────────────────────────────────────────────────────────────────
+_SCHEMAS_DIR = Path(__file__).parent / 'serpapi_schemas'
+
+_HOTEL_PROPERTY_TYPES = (_SCHEMAS_DIR / 'google-hotels-property-types.json').read_text(encoding='utf-8').strip('{}')
+_VR_PROPERTY_TYPES = (_SCHEMAS_DIR / 'google-hotels-vacation-rentals-property-types.json').read_text(encoding='utf-8').strip('{}')
+_HOTEL_AMENITIES = (_SCHEMAS_DIR / 'google-hotels-amenities.json').read_text(encoding='utf-8').strip('{}')
+_VR_AMENITIES = (_SCHEMAS_DIR / 'google-hotels-vacation-rentals-amenities.json').read_text(encoding='utf-8').strip('{}')
 
 
-def _load_schema(engine: str) -> dict:
-    """Load the parameter schema for a given SerpAPI engine."""
-    path = _SCHEMA_DIR / f'{engine}.json'
-    if path.exists():
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
+# ── Input Schemas ──────────────────────────────────────────────────────────────
+class SearchFlightsInput(BaseModel):
+    """Input schema for the search_flights tool."""
+
+    departure_id: str = Field(
+        description='Departure airport IATA code or location kgmid. An airport code is an uppercase 3-letter code (e.g. "CCU" for Kolkata, "DEL" for Delhi). A location kgmid starts with "/m/" (e.g. "/m/0vzm" for Austin, TX). Multiple airports can be separated by commas.'
+    )
+    arrival_id: str = Field(
+        description='Arrival airport IATA code or location kgmid. An airport code is an uppercase 3-letter code (e.g. "BLR" for Bangalore, "BOM" for Mumbai). A location kgmid starts with "/m/". Multiple airports can be separated by commas.'
+    )
+    outbound_date: str = Field(
+        description='Outbound date in YYYY-MM-DD format (e.g. "2026-01-15").'
+    )
+    return_date: str | None = Field(
+        default=None,
+        description='Return date in YYYY-MM-DD format (e.g. "2026-01-21"). Required when trip_type is 1 (Round trip).',
+    )
+    adults: int = Field(
+        default=1,
+        description='Number of adult passengers. Default is 1.',
+    )
+    children: int = Field(
+        default=0,
+        description='Number of child passengers. Default is 0.',
+    )
+    max_price: int | None = Field(
+        default=None,
+        description='Maximum ticket price filter (in the selected currency).',
+    )
+    travel_class: Literal[1, 2, 3, 4] = Field(
+        default=1,
+        description='Cabin class: 1 = Economy (default), 2 = Premium economy, 3 = Business, 4 = First.',
+    )
+    currency: str = Field(
+        default='INR',
+        description='Currency code for returned prices (e.g. "INR", "USD", "EUR"). Defaults to "INR".',
+    )
+    stops: Literal[0, 1, 2, 3] = Field(
+        default=0,
+        description='Maximum number of stops: 0 = Any number of stops (default), 1 = Nonstop only, 2 = 1 stop or fewer, 3 = 2 stops or fewer.',
+    )
+    sort_by: Literal[1, 2, 3, 4, 5, 6] = Field(
+        default=1,
+        description='Sorting order of results: 1 = Top flights (default), 2 = Price, 3 = Departure time, 4 = Arrival time, 5 = Duration, 6 = Emissions.',
+    )
+    trip_type: Literal[1, 2] = Field(
+        default=1,
+        description='Type of trip: 1 = Round trip (default), 2 = One way.',
+    )
+
+
+class SearchHotelsInput(BaseModel):
+    """Input schema for the search_hotels tool."""
+
+    query: str = Field(
+        description='Search query for hotels, just like a regular Google Hotels search (e.g. "hotels in Bangalore", "5 star hotels near Connaught Place Delhi").'
+    )
+    check_in_date: str = Field(
+        description='Check-in date in YYYY-MM-DD format (e.g. "2026-01-15").'
+    )
+    check_out_date: str = Field(
+        description='Check-out date in YYYY-MM-DD format (e.g. "2026-01-16").'
+    )
+    adults: int = Field(
+        default=2,
+        description='Number of adult guests. Default is 2.',
+    )
+    children: int = Field(
+        default=0,
+        description='Number of child guests. Default is 0.',
+    )
+    currency: str = Field(
+        default='INR',
+        description='Currency code for returned prices (e.g. "INR", "USD", "EUR"). Defaults to "INR".',
+    )
+    sort_by: Literal[3, 8, 13] | None = Field(
+        default=None,
+        description='Sort order for results (omit for relevance): 3 = Lowest price, 8 = Highest rating, 13 = Most reviewed.',
+    )
+    min_price: int | None = Field(
+        default=None,
+        description='Minimum price per night filter (in the selected currency).',
+    )
+    max_price: int | None = Field(
+        default=None,
+        description='Maximum price per night filter (in the selected currency).',
+    )
+    rating: Literal[7, 8, 9] | None = Field(
+        default=None,
+        description='Minimum guest rating filter: 7 = 3.5+, 8 = 4.0+, 9 = 4.5+.',
+    )
+    hotel_class: str | None = Field(
+        default=None,
+        description='Hotel star class filter. Single value or comma-separated: "2" = 2-star, "3" = 3-star, "4" = 4-star, "5" = 5-star. Example: "4" or "3,4,5".',
+    )
+    vacation_rentals: bool = Field(
+        default=False,
+        description='If True, search for vacation rentals instead of hotels. This changes which property_types and amenities codes are valid.',
+    )
+    property_types: str | None = Field(
+        default=None,
+        description=f'Filter by property type. Single code or comma-separated. Hotels: {_HOTEL_PROPERTY_TYPES}. Vacation rentals: {_VR_PROPERTY_TYPES}. Example: "17" or "17,18".',
+    )
+    amenities: str | None = Field(
+        default=None,
+        description=f'Filter by amenities. Single code or comma-separated. Hotels: {_HOTEL_AMENITIES}. Vacation rentals: {_VR_AMENITIES}. Example: "35,7" or "15,32".',
+    )
+    bedrooms: int | None = Field(
+        default=None,
+        description='Minimum number of bedrooms. Only applicable when vacation_rentals is True.',
+    )
+    bathrooms: int | None = Field(
+        default=None,
+        description='Minimum number of bathrooms. Only applicable when vacation_rentals is True.',
+    )
+
+
+class SearchLocalPlacesInput(BaseModel):
+    """Input schema for the search_local_places tool."""
+
+    query: str = Field(
+        description='What to search for, just like a regular Google Local search (e.g. "best pizza restaurants", "tourist attractions", "coffee shops").'
+    )
+    location: str = Field(
+        description='Location from which the search should originate. Specify at the city level for best results (e.g. "Bangalore, Karnataka, India", "Paris, France").'
+    )
 
 
 # ── Tools ──────────────────────────────────────────────────────────────────────
-@tool
+@tool(args_schema=SearchFlightsInput)
 def search_flights(
     departure_id: str,
     arrival_id: str,
     outbound_date: str,
     return_date: str | None = None,
     adults: int = 1,
+    children: int = 0,
     travel_class: int = 1,
     currency: str = 'INR',
     stops: int = 0,
     sort_by: int = 1,
     trip_type: int = 1,
+    max_price: int | None = None,
 ) -> str:
     """Search for flights on Google Flights via SerpAPI.
 
-    Args:
-        departure_id: Departure airport IATA code (e.g. 'CCU', 'DEL').
-        arrival_id: Arrival airport IATA code (e.g. 'BLR', 'BOM').
-        outbound_date: Outbound date (YYYY-MM-DD).
-        return_date: Return date (YYYY-MM-DD). Required for round trips.
-        adults: Number of adults.
-        travel_class: 1=Economy, 2=Premium Economy, 3=Business, 4=First.
-        currency: Currency code (e.g. 'INR', 'USD').
-        stops: 0=Any, 1=Nonstop, 2=1 stop or fewer, 3=2 stops or fewer.
-        sort_by: 1=Top flights, 2=Price, 3=Departure time, 4=Arrival time, 5=Duration.
-        trip_type: 1=Round trip, 2=One way.
-
-    Returns:
-        A JSON string with the best flights and other flights found.
+    Returns a JSON string with the best flights and other flights found.
     """
-    outbound_date = resolve_date(outbound_date)
     params: dict = {
         'engine': 'google_flights',
         'hl': 'en',
@@ -71,6 +184,10 @@ def search_flights(
         'stops': str(stops),
         'sort_by': str(sort_by),
     }
+    if children:
+        params['children'] = str(children)
+    if max_price:
+        params['max_price'] = str(max_price)
     if return_date and trip_type == 1:
         params['return_date'] = return_date
 
@@ -88,37 +205,28 @@ def search_flights(
     return json.dumps(output, indent=2, ensure_ascii=False)
 
 
-@tool
+@tool(args_schema=SearchHotelsInput)
 def search_hotels(
     query: str,
     check_in_date: str,
     check_out_date: str,
     adults: int = 2,
+    children: int = 0,
     currency: str = 'INR',
     sort_by: int | None = None,
     min_price: int | None = None,
     max_price: int | None = None,
     rating: int | None = None,
     hotel_class: str | None = None,
-    free_cancellation: bool | None = None,
+    vacation_rentals: bool = False,
+    property_types: str | None = None,
+    amenities: str | None = None,
+    bedrooms: int | None = None,
+    bathrooms: int | None = None,
 ) -> str:
-    """Search for hotels on Google Hotels via SerpAPI.
+    """Search for hotels or vacation rentals on Google Hotels via SerpAPI.
 
-    Args:
-        query: Search query (e.g. 'hotels in Bangalore').
-        check_in_date: Check-in date (YYYY-MM-DD).
-        check_out_date: Check-out date (YYYY-MM-DD).
-        adults: Number of adults.
-        currency: Currency code (e.g. 'INR', 'USD').
-        sort_by: 3=Lowest price, 8=Highest rating, 13=Most reviewed.
-        min_price: Minimum price filter.
-        max_price: Maximum price filter.
-        rating: 7=3.5+, 8=4.0+, 9=4.5+.
-        hotel_class: Hotel star class, e.g. '3' or '3,4,5'.
-        free_cancellation: Filter for free cancellation.
-
-    Returns:
-        A JSON string with hotel properties.
+    Returns a JSON string with hotel/rental properties.
     """
     params: dict = {
         'engine': 'google_hotels',
@@ -130,6 +238,8 @@ def search_hotels(
         'adults': str(adults),
         'currency': currency,
     }
+    if children:
+        params['children'] = str(children)
     if sort_by is not None:
         params['sort_by'] = str(sort_by)
     if min_price is not None:
@@ -140,8 +250,16 @@ def search_hotels(
         params['rating'] = str(rating)
     if hotel_class is not None:
         params['hotel_class'] = hotel_class
-    if free_cancellation is not None:
-        params['free_cancellation'] = str(free_cancellation).lower()
+    if vacation_rentals:
+        params['vacation_rentals'] = 'true'
+    if property_types is not None:
+        params['property_types'] = property_types
+    if amenities is not None:
+        params['amenities'] = amenities
+    if bedrooms is not None:
+        params['bedrooms'] = str(bedrooms)
+    if bathrooms is not None:
+        params['bathrooms'] = str(bathrooms)
 
     results = _client.search(params)
 
@@ -152,19 +270,14 @@ def search_hotels(
     return json.dumps(output, indent=2, ensure_ascii=False)
 
 
-@tool
+@tool(args_schema=SearchLocalPlacesInput)
 def search_local_places(
     query: str,
     location: str,
 ) -> str:
     """Search for local places (restaurants, attractions, etc.) via Google Local.
 
-    Args:
-        query: What to search for (e.g. 'best pizza restaurants').
-        location: Location string (e.g. 'Bangalore, Karnataka, India').
-
-    Returns:
-        A JSON string with local results including name, rating, address, etc.
+    Returns a JSON string with local results including name, rating, address, etc.
     """
     params: dict = {
         'engine': 'google_local',
