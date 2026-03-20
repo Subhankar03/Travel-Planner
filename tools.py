@@ -2,7 +2,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Literal
 
 import serpapi
 from langchain_core.tools import tool
@@ -51,7 +50,7 @@ class SearchFlightsInput(BaseModel):
         default=None,
         description='Maximum ticket price filter (in the selected currency).',
     )
-    travel_class: Literal[1, 2, 3, 4] = Field(
+    travel_class: int = Field(
         default=1,
         description='Cabin class: 1 = Economy (default), 2 = Premium economy, 3 = Business, 4 = First.',
     )
@@ -59,15 +58,15 @@ class SearchFlightsInput(BaseModel):
         default='INR',
         description='Currency code for returned prices (e.g. "INR", "USD", "EUR"). Defaults to "INR".',
     )
-    stops: Literal[0, 1, 2, 3] = Field(
+    stops: int = Field(
         default=0,
         description='Maximum number of stops: 0 = Any number of stops (default), 1 = Nonstop only, 2 = 1 stop or fewer, 3 = 2 stops or fewer.',
     )
-    sort_by: Literal[1, 2, 3, 4, 5, 6] = Field(
+    sort_by: int = Field(
         default=1,
         description='Sorting order of results: 1 = Top flights (default), 2 = Price, 3 = Departure time, 4 = Arrival time, 5 = Duration, 6 = Emissions.',
     )
-    trip_type: Literal[1, 2] = Field(
+    trip_type: int = Field(
         default=1,
         description='Type of trip: 1 = Round trip (default), 2 = One way.',
     )
@@ -97,7 +96,7 @@ class SearchHotelsInput(BaseModel):
         default='INR',
         description='Currency code for returned prices (e.g. "INR", "USD", "EUR"). Defaults to "INR".',
     )
-    sort_by: Literal[3, 8, 13] | None = Field(
+    sort_by: int | None = Field(
         default=None,
         description='Sort order for results (omit for relevance): 3 = Lowest price, 8 = Highest rating, 13 = Most reviewed.',
     )
@@ -109,7 +108,7 @@ class SearchHotelsInput(BaseModel):
         default=None,
         description='Maximum price per night filter (in the selected currency).',
     )
-    rating: Literal[7, 8, 9] | None = Field(
+    rating: int | None = Field(
         default=None,
         description='Minimum guest rating filter: 7 = 3.5+, 8 = 4.0+, 9 = 4.5+.',
     )

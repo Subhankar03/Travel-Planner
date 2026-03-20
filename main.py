@@ -6,6 +6,8 @@ import warnings
 warnings.filterwarnings('ignore', message='.*Pydantic V1 functionality.*')
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+
+from logger import TravelPlannerLogger
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -112,7 +114,11 @@ def main() -> None:
     messages: list = []
     last_trace: list = []
 
+    # Initialise session logger
+    logger = TravelPlannerLogger()
+
     print_welcome(console)
+    console.print(f'[dim]📝 Session log → {logger.log_path}[/]\n')
 
     # Build graph
     with console.status('[bold green]Initialising agents…', spinner='dots'):
@@ -144,6 +150,7 @@ def main() -> None:
             user_input = session.prompt(prompt_text).strip()
         except (KeyboardInterrupt, EOFError):
             console.print('\n[dim]Goodbye! 👋[/]')
+            logger.close()
             break
 
         if not user_input:
@@ -152,9 +159,11 @@ def main() -> None:
         # ── Commands ───────────────────────────────────────────────────────
         if user_input.lower() in ('/exit', '/quit'):
             console.print('[dim]Goodbye! 👋[/]')
+            logger.close()
             break
         if user_input.lower() == '/clear':
             messages.clear()
+            logger.log_separator('Conversation cleared')
             console.print('[yellow]🗑  Conversation cleared.[/]\n')
             continue
         if user_input.lower() == '/help':
@@ -174,6 +183,10 @@ def main() -> None:
         console.print()
         messages.append(HumanMessage(content=user_input))
 
+        # Log the user's turn
+        logger.log_separator('New Turn')
+        logger.log_user(user_input)
+
         final_ai_content: str | None = None
         last_trace.clear()
 
@@ -186,7 +199,10 @@ def main() -> None:
                     for node_name, node_output in chunk.items():
                         # Update status to show what node is running
                         status.update(f'[bold green]✨ Thinking…[/] [dim](Current: {node_name})[/]')
-                        
+
+                        # Log node execution
+                        logger.log_node(node_name)
+
                         # Collect trace internally instead of printing
                         last_trace.append(format_node_trace(node_name))
 
@@ -197,15 +213,25 @@ def main() -> None:
                         node_messages = node_output.get('messages', [])
                         for msg in node_messages:
                             if isinstance(msg, ToolMessage):
+                                # Log tool output
+                                logger.log_tool_output(msg.name or 'tool', msg.content)
                                 last_trace.append(format_tool_result(msg))
-                            elif isinstance(msg, AIMessage) and msg.text:
-                                final_ai_content = msg.text
+                            elif isinstance(msg, AIMessage):
+                                # Log tool calls embedded in the AIMessage (if any)
+                                for tc in getattr(msg, 'tool_calls', []) or []:
+                                    logger.log_tool_call(
+                                        tc.get('name', 'unknown'),
+                                        tc.get('args'),
+                                    )
+                                if msg.text:
+                                    final_ai_content = msg.text
         except Exception:
             console.print_exception(show_locals=False)
             continue
 
         # ── Display Response ───────────────────────────────────────────────
         if final_ai_content:
+            logger.log_ai(final_ai_content)
             print_response(console, final_ai_content)
             messages.append(AIMessage(content=final_ai_content))
         else:

@@ -3,7 +3,10 @@ import warnings
 warnings.filterwarnings('ignore', message='.*Pydantic V1 functionality.*')
 
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
 from langchain_core.messages import HumanMessage, AIMessage
+
+from typing import Any, cast
 
 from agent import build_graph
 
@@ -184,11 +187,14 @@ if user_input:
     with st.chat_message('assistant'):
         with st.spinner('✨ Thinking…'):
             result = st.session_state.graph.invoke(
-                {
-                    'messages': st.session_state.messages,
-                    'user_location': st.session_state.get('user_location'),
-                    'itinerary': None,
-                },
+                cast(
+                    Any,
+                    {
+                        'messages': st.session_state.messages,
+                        'user_location': st.session_state.get('user_location'),
+                        'itinerary': None,
+                    },
+                ),
             )
 
         # Extract the final AI response

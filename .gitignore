@@ -17,3 +17,6 @@ wheels/
 
 # Temporary scripts
 temp.py
+
+# Logs
+logs
