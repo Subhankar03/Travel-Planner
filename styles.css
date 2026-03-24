@@ -1,0 +1,330 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+/* Header styling */
+.header-container {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
+}
+
+.header-container h1 {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.header-container p {
+    color: #a0aec0;
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+/* Chat messages */
+.stChatMessage {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(12px);
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* Chat input */
+.stChatInput>div {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    color: white !important;
+}
+
+.stChatInput textarea {
+    color: #ffffff !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: rgba(15, 12, 41, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] span {
+    color: #e2e8f0 !important;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0.15rem;
+}
+
+.badge-flights {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.badge-hotels {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+}
+
+.badge-local {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+
+.badge-active {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #1a1a2e;
+}
+
+/* Spinner */
+.stSpinner>div {
+    color: #a78bfa !important;
+}
+
+/* General text */
+.stMarkdown p,
+.stMarkdown li {
+    color: #e2e8f0;
+}
+
+.stMarkdown h1,
+.stMarkdown h2,
+.stMarkdown h3 {
+    color: #ffffff;
+}
+
+.stMarkdown strong {
+    color: #c4b5fd;
+}
+
+.stMarkdown code {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+}
+
+/* ── Result Cards ────────────────────────────────────────────────────── */
+.result-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 0.75rem;
+    backdrop-filter: blur(8px);
+    display: flex;
+    overflow: hidden;
+    min-height: 115px;
+    height: 115px;
+}
+
+/* Left image area inside card */
+.card-img-wrap {
+    width: 160px;
+    min-height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-img-wrap .logo-img {
+    width: 80px;
+    height: auto;
+    object-fit: contain;
+}
+
+.card-img-wrap .fallback-emoji {
+    font-size: 2.5rem;
+}
+
+/* Right content area */
+.card-body {
+    flex: 1;
+    min-width: 0;
+    padding: 0.7rem 1.1rem 1.2rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.card-title {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-subtitle {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    margin-bottom: 0.1rem;
+}
+
+.card-price {
+    color: #43e97b;
+    font-weight: 700;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.card-rating {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.card-meta {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: rgba(139, 92, 246, 0.25);
+    color: #c4b5fd;
+    margin-right: 0.3rem;
+    margin-bottom: 0.2rem;
+}
+
+/* Bottom row for badges + button */
+.card-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    gap: 0.5rem;
+}
+
+/* Book Now button */
+.book-btn {
+    display: inline-block;
+    padding: 0.45rem 1.1rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.35);
+    flex-shrink: 0;
+}
+
+.book-btn span {
+    transition: all 0.2s;
+}
+
+.book-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+}
+
+.book-btn:hover span {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.card-img {
+    border-radius: 10px;
+    object-fit: cover;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+}
+
+/* Image overlay for modal trigger */
+.card-img-wrap {
+    position: relative;
+    width: 160px;
+    min-height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.img-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 2rem;
+    pointer-events: none;
+}
+
+.card-img-wrap:hover .img-overlay {
+    opacity: 1;
+}
+
+/* Carousel Modal */
+.carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 1rem;
+}
+.carousel img {
+    scroll-snap-align: start;
+    border-radius: 8px;
+    height: 300px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.carousel::-webkit-scrollbar {
+    height: 8px;
+}
+.carousel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+.carousel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}

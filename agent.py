@@ -1,12 +1,12 @@
 """LangGraph multi-agent workflow for the Travel Planner."""
 from __future__ import annotations
 
-import requests
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+import requests
 from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import (
@@ -15,7 +15,7 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.graph import END, StateGraph, START
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from state import TravelState
@@ -48,9 +48,9 @@ def supervisor_node(state: TravelState) -> dict:
 
     # Ask the model to choose the next agent
     routing_instructions = (
-        f'Given the conversation above, who should act next?\n'
-        f"Choose one of: 'booking_agent', 'research_agent', 'FINISH'\n"
-        f'Respond with ONLY the name of the agent (or FINISH), nothing else.'
+        'Given the conversation above, who should act next?\n'
+        "Choose one of: 'booking_agent', 'research_agent', 'FINISH'\n"
+        'Respond with ONLY the name of the agent (or FINISH), nothing else.'
     )
 
     prompt = ChatPromptTemplate.from_messages([

@@ -1,32 +1,32 @@
 """AI Travel Planner — Rich CLI Interface for testing."""
 from __future__ import annotations
+
 import warnings
 
 # Silence Pydantic V1 compatibility warning for Python 3.14
 warnings.filterwarnings('ignore', message='.*Pydantic V1 functionality.*')
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from collections.abc import Iterable
+from typing import Any, cast
 
-from logger import TravelPlannerLogger
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion, WordCompleter
+from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.styles import Style
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.text import Text
 from rich.traceback import install
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter, Completer, Completion
-from prompt_toolkit.document import Document
-from prompt_toolkit.formatted_text import FormattedText
-from prompt_toolkit.styles import Style
 
-from collections.abc import Iterable
-from typing import Any, cast
+from logger import TravelPlannerLogger
 
 install()
 
 from agent import build_graph
-
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 NODE_STYLES = {

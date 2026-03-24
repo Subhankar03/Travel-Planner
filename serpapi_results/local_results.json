@@ -1,1 +1,444 @@
-{"search_metadata": {"id": "69b6750173ae60079b720ca3", "status": "Success", "json_endpoint": "https://serpapi.com/searches/-XRw38jrDb18T_nWdg-c9Q/69b6750173ae60079b720ca3.json", "created_at": "2026-03-15 08:59:45 UTC", "processed_at": "2026-03-15 08:59:45 UTC", "google_local_url": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&udm=1", "raw_html_file": "https://serpapi.com/searches/-XRw38jrDb18T_nWdg-c9Q/69b6750173ae60079b720ca3.html", "total_time_taken": 2.88}, "search_parameters": {"engine": "google_local", "q": "pizza shops in kolkata", "location_requested": "Kolkata, West Bengal, India", "location_used": "Kolkata,West Bengal,India", "google_domain": "google.com", "hl": "en", "gl": "in", "device": "desktop"}, "local_map": {"gps_coordinates": {"latitude": 22.549184085759524, "longitude": 88.3633804321289}}, "local_results": [{"position": 1, "rating": 4.3, "reviews": 2400, "reviews_original": "(2.4K)", "price": "₹₹₹", "description": "Stylish Italian pizza & pasta joint", "lsig": "AB86z5V73SmUNrr-2AfQ-9pAX6Ps", "thumbnail": "https://serpapi.com/searches/69b6750173ae60079b720ca3/images/2TTASCiecIq910sA_CaKWJhChYbrqTxLrNkjqiuZ9Ws.jpeg", "place_id": "1446228063735956055", "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&ludocid=1446228063735956055&q=pizza+shops+in+kolkata", "provider_id": "/g/1t_kdyhy", "gps_coordinates": {"latitude": 22.549595, "longitude": 88.34947}, "title": "Fire And Ice Pizzeria", "type": "Pizza", "address": "Kanak Building, Jawaharlal Nehru Rd"}, {"position": 2, "rating": 4.7, "reviews": 422, "reviews_original": "(422)", "price": "₹200–400", "lsig": "AB86z5WWvxJUBQRYB-en3Yr9vGD8", "thumbnail": "https://serpapi.com/searches/69b6750173ae60079b720ca3/images/PBzXemeWXYXWcymkDHVra2Yr_ntlKjgbkYc1rYU95U0.jpeg", "service_options": {"dine_in": true, "takeaway": true, "delivery": true}, "place_id": "8018415708778813260", "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&ludocid=8018415708778813260&q=pizza+shops+in+kolkata", "provider_id": "/g/11lnv_1xsg", "gps_coordinates": {"latitude": 22.5559, "longitude": 88.3505}, "title": "MOJO Pizza - 2X Toppings", "type": "Pizza", "address": "CHOWRINGHEE MANSIONS, Al Haj Amir Hasan Properties PVT LTD, A/2/B, Dr Md Ishaque Rd"}, {"position": 3, "rating": 4.4, "reviews": 2900, "reviews_original": "(2.9K)", "price": "₹₹₹", "description": "Chic Italian cafe with a cool vibe", "lsig": "AB86z5VGVeYZsumRNSgQglsnmCzz", "thumbnail": "https://serpapi.com/searches/69b6750173ae60079b720ca3/images/ZmE4RN9_bSHG15X9HxKYjYw4MWsb0p8fKmETWMfXv2M.jpeg", "place_id": "11835467753130161676", "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&ludocid=11835467753130161676&q=pizza+shops+in+kolkata", "provider_id": "/g/11dfq5769m", "gps_coordinates": {"latitude": 22.552237, "longitude": 88.3526}, "title": "Fabbrica - Originale", "type": "Pizza", "address": "Ground floor, 18A, Park St"}], "pagination": {"current": 1, "next": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&start=20&udm=1", "other_pages": {"2": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&start=20&udm=1", "3": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&start=40&udm=1", "4": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&start=60&udm=1", "5": "https://www.google.com/search?q=pizza+shops+in+kolkata&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ&hl=en&gl=in&start=80&udm=1"}}, "serpapi_pagination": {"current": 1, "next_link": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=20&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ", "next": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=20&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ", "other_pages": {"2": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=20&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ", "3": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=40&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ", "4": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=60&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ", "5": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Kolkata%2C+West+Bengal%2C+India&q=pizza+shops+in+kolkata&start=80&uule=w+CAIQICIZS29sa2F0YSxXZXN0IEJlbmdhbCxJbmRpYQ"}}}
+{
+  "search_metadata": {
+    "id": "69c036b83d3656c48e4ba3ca",
+    "status": "Success",
+    "json_endpoint": "https://serpapi.com/searches/GNvXobmwSJwqgRg-xiNaLg/69c036b83d3656c48e4ba3ca.json",
+    "created_at": "2026-03-22 18:36:40 UTC",
+    "processed_at": "2026-03-22 18:36:40 UTC",
+    "google_local_url": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&udm=1",
+    "raw_html_file": "https://serpapi.com/searches/GNvXobmwSJwqgRg-xiNaLg/69c036b83d3656c48e4ba3ca.html",
+    "total_time_taken": 2.46
+  },
+  "search_parameters": {
+    "engine": "google_local",
+    "q": "best historical forts and monuments in Jaipur",
+    "location_requested": "Jaipur, Rajasthan, India",
+    "location_used": "Jaipur,Rajasthan,India",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "in",
+    "device": "desktop"
+  },
+  "local_map": {
+    "gps_coordinates": {
+      "latitude": 26.936150306257183,
+      "longitude": 75.87226867675781
+    }
+  },
+  "local_results": [
+    {
+      "position": 1,
+      "rating": 4.6,
+      "reviews": 6100,
+      "reviews_original": "(6.1K)",
+      "description": "Amber Fort area with ornate mirrorwork",
+      "lsig": "AB86z5VUB_YR6SHlKZ4tu1_ji-vO",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/JHf48G1S2yA3B1caOv2U7-AvoCrTkqYy3-1GtyyrrOI.jpeg",
+      "place_id": "5713478239313117805",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=5713478239313117805&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/12qfr08xy",
+      "gps_coordinates": {
+        "latitude": 26.98571,
+        "longitude": 75.85065
+      },
+      "title": "Sheesh Mahal, Amber Fort",
+      "type": "Tourist attraction",
+      "address": "JAIGARH FORT",
+      "hours": "Closed · Opens 8 am"
+    },
+    {
+      "position": 2,
+      "rating": 4.5,
+      "reviews": 32000,
+      "reviews_original": "(32K)",
+      "description": "Historic hilltop fort with a musuem",
+      "lsig": "AB86z5Udn_RKl186QRgF3HQ4VIRu",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/WIfbeS5MKD2aTZvqb8RhuR7Fde9hW8b9zIRbF62pexY.jpeg",
+      "place_id": "13554080739731002241",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=13554080739731002241&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/0glkt_",
+      "gps_coordinates": {
+        "latitude": 26.98165,
+        "longitude": 75.84482
+      },
+      "title": "Jaigarh Fort",
+      "type": "Historical place museum",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 9 am"
+    },
+    {
+      "position": 3,
+      "rating": 4.5,
+      "reviews": 77000,
+      "reviews_original": "(77K)",
+      "description": "\"This is one of the best forts in Jaipur.\"",
+      "lsig": "AB86z5We5gNfVyNjR4W_LRTgi1Pk",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/Jfux_2neoMFSdjXR53_HkmT1yhTkdP0DK0G5NiaOLcw.jpeg",
+      "place_id": "768610193590099595",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=768610193590099595&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/0gllcz",
+      "gps_coordinates": {
+        "latitude": 26.940166,
+        "longitude": 75.81704
+      },
+      "title": "Nahargarh Fort",
+      "type": "Historical landmark",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 10 am"
+    },
+    {
+      "position": 4,
+      "rating": 4.3,
+      "reviews": 2000,
+      "reviews_original": "(2K)",
+      "description": "\"Such a beautiful place to visit Jaipur\"",
+      "lsig": "AB86z5V3MMTrNwUrxKAxBtp0wv2F",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/QopGLT5jUXuzpiBtkVdB8kcWETDHqWHDU5KVHY6Bgdg.jpeg",
+      "place_id": "6185144602781233616",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=6185144602781233616&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/1tfm9n2h",
+      "gps_coordinates": {
+        "latitude": 26.872564,
+        "longitude": 75.9484
+      },
+      "title": "Kanota Fort",
+      "type": "Historical landmark",
+      "address": "VWFX+29C"
+    },
+    {
+      "position": 5,
+      "rating": 4.6,
+      "reviews": 386,
+      "reviews_original": "(386)",
+      "description": "\"Best fort in Jaipur\"",
+      "lsig": "AB86z5W5wJe4glXtFRZCbbkk1Vtm",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/DCyN6y-LMIX6NHH7ETyqsZoDbVjlyWuNMaMs7MPCBvA.jpeg",
+      "place_id": "4125242272875786852",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=4125242272875786852&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11f40p0z7h",
+      "gps_coordinates": {
+        "latitude": 26.986904,
+        "longitude": 75.851135
+      },
+      "title": "Amber Fort",
+      "type": "Historical landmark",
+      "address": "XVP2+QF6"
+    },
+    {
+      "position": 6,
+      "rating": 4.5,
+      "reviews": 216,
+      "reviews_original": "(216)",
+      "description": "\"Visited Mar 2023. One of the few tourist free places in Jaipur, clap-clap.\"",
+      "lsig": "AB86z5WFJM3zZzF5v3qFMNEqhsSI",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/vPsBdnF2NvZNWm-XnLc9msZYsXNbrX9GtG3audlQF98.jpeg",
+      "place_id": "6872032615876948861",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=6872032615876948861&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11gtzfnqy8",
+      "gps_coordinates": {
+        "latitude": 26.906496,
+        "longitude": 75.85223
+      },
+      "title": "Amagarh fort",
+      "type": "Fortress",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 8 am"
+    },
+    {
+      "position": 7,
+      "rating": 4.4,
+      "reviews": 827,
+      "reviews_original": "(827)",
+      "description": "Ancient, architecturally unique place",
+      "lsig": "AB86z5XV0PZKktvMfrAnQoCDLxN6",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/KH9yZxFFyku9mUfAAhxZ5eHGTlkk_gp6Jrs3wzumOpc.jpeg",
+      "place_id": "2055408434604516824",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=2055408434604516824&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/1hm52_hvn",
+      "gps_coordinates": {
+        "latitude": 26.991213,
+        "longitude": 75.85115
+      },
+      "title": "Amer Stepwell",
+      "type": "Historical landmark",
+      "address": "XVR2+FFJ, Near Kheri Gate"
+    },
+    {
+      "position": 8,
+      "rating": 4.5,
+      "reviews": 46,
+      "reviews_original": "(46)",
+      "description": "\"#NahargarhFort #JaipurViews #TravelDiaries\"",
+      "lsig": "AB86z5WmBA1Q8HmQQOYZaCApPqCX",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/gX3_uFOSS-cAdAmHwV4o8IrU7P_GdzPtsp6Ha40EVvw.jpeg",
+      "place_id": "6577724881584524244",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=6577724881584524244&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11thc_bg12",
+      "gps_coordinates": {
+        "latitude": 26.938303,
+        "longitude": 75.81522
+      },
+      "title": "Step well of Nahargarh Fort Jaipur",
+      "type": "Tourist attraction",
+      "address": "WRQ8+83H"
+    },
+    {
+      "position": 9,
+      "rating": 4.5,
+      "reviews": 551,
+      "reviews_original": "(551)",
+      "description": "\"It lies exactly between Jaigarh and Nahargarh fort.\"",
+      "lsig": "AB86z5WDDjA6QUHzB-QZJWkSRQfs",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/7yHbW4gNasWjef2XjV5OVMOH8k46ANTOMGjHpepEsJY.jpeg",
+      "place_id": "697160373416382886",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=697160373416382886&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11f53rtxc9",
+      "gps_coordinates": {
+        "latitude": 26.952433,
+        "longitude": 75.82738
+      },
+      "title": "Medieval Ruins",
+      "type": "Historical landmark",
+      "address": "XR2G+XXC"
+    },
+    {
+      "position": 10,
+      "rating": 4.0,
+      "reviews": 116,
+      "reviews_original": "(116)",
+      "description": "\"Jaipur was originally built by Meena Kings before the invading Rajputs.\"",
+      "lsig": "AB86z5Vqe9KYM5DGI-kuJqFh_veo",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/EWJ-fudXAfETwLn8NYf6V5bB2nuiSDJYEVLg410Xelc.jpeg",
+      "place_id": "16920221855773202288",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=16920221855773202288&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11dxnnxnh8",
+      "gps_coordinates": {
+        "latitude": 26.916937,
+        "longitude": 75.79613
+      },
+      "title": "Hathroi Fort",
+      "type": "Historical landmark",
+      "address": "Harikishan Somani Marg",
+      "hours": "Closed · Opens 9 am"
+    },
+    {
+      "position": 11,
+      "rating": 4.3,
+      "reviews": 336,
+      "reviews_original": "(336)",
+      "description": "\"3. Ruins of the old fort, offering a glimpse into history.\"",
+      "lsig": "AB86z5W5l3GoRKPZ0ppaI2L54m3U",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/sRFgl8dg2kD6sQjJdlML9xu9GT1jaHtd4Afif0g7hUE.jpeg",
+      "place_id": "16029155628620217424",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=16029155628620217424&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11c5xcqn77",
+      "gps_coordinates": {
+        "latitude": 26.928665,
+        "longitude": 75.974884
+      },
+      "title": "Nayla Fort",
+      "type": "Tourist attraction",
+      "address": "WXHF+FX6",
+      "hours": "Closed · Opens 9 am"
+    },
+    {
+      "position": 12,
+      "rating": 4.2,
+      "reviews": 39000,
+      "reviews_original": "(39K)",
+      "description": "\"Jal Mahal🥰 is a beautiful and historical monument of Jaipur.\"",
+      "lsig": "AB86z5VjLAJfUmvyjb0yHw1V-5Dj",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/4cbCOCxrl_K2twXrML83vnlHgrzmeCWBbHy5H3C4Mfs.jpeg",
+      "place_id": "10940174856982080466",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=10940174856982080466&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/0d9sr4",
+      "gps_coordinates": {
+        "latitude": 26.953459,
+        "longitude": 75.84612
+      },
+      "title": "Jal Mahal",
+      "type": "Historical landmark",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 8 am"
+    },
+    {
+      "position": 13,
+      "rating": 4.4,
+      "reviews": 6200,
+      "reviews_original": "(6.2K)",
+      "description": "\"Historical place in Jaipur near Amber Fort.\"",
+      "lsig": "AB86z5VRMiQES67jKHuuHdBcfBE6",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/M1Q20qPrYFSlsW4Z8FtSezU9OriWiTxB-BMOzmWx_WA.jpeg",
+      "place_id": "16089960436941263472",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=16089960436941263472&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/1q67ckj1z",
+      "gps_coordinates": {
+        "latitude": 26.991158,
+        "longitude": 75.851105
+      },
+      "title": "Panna Meena ka Kund",
+      "type": "Historical place",
+      "address": "XVR2+FGV",
+      "hours": "Closed · Opens 7 am"
+    },
+    {
+      "position": 14,
+      "rating": 4.5,
+      "reviews": 1.6,
+      "reviews_original": "(1.6L)",
+      "description": "\"One of the best Monuments present in Jaipur.\"",
+      "lsig": "AB86z5WeRppCByz_cKHGS83RJ2op",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/CLr0go-g2ou2BkijobU2l983F3TACEhSUnCgzrSdn6Q.jpeg",
+      "place_id": "9659760862336692748",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=9659760862336692748&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/06k7qc",
+      "gps_coordinates": {
+        "latitude": 26.924046,
+        "longitude": 75.82671
+      },
+      "title": "Hawa Mahal",
+      "type": "Tourist attraction",
+      "address": "Hawa Mahal Rd",
+      "hours": "Closed · Opens 9 am"
+    },
+    {
+      "position": 15,
+      "rating": 4.4,
+      "reviews": 171,
+      "reviews_original": "(171)",
+      "description": "\"Location: It is one of the main gateways of the old walled city of Jaipur.\"",
+      "lsig": "AB86z5V0LUIcLzU0s9A8inPplthv",
+      "thumbnail": "https://lh3.googleusercontent.com/gps-cs-s/AHVAweqAm4yeWhwJjyCIyTYSWJGLLSnp9vXmiYX8RWl7ObQcIyc4LVug7KzWpVHzkoV0NQxvlDL13socFnHGU8F0WJFL2CdgW4zL_Jdm8CGXsntq5p6tHsziBLjoet-sZqjC3cev3NmF=w90-h90-n-k-no-l75",
+      "place_id": "16254819762416791006",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=16254819762416791006&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11c5bnpm04",
+      "gps_coordinates": {
+        "latitude": 26.987177,
+        "longitude": 75.85093
+      },
+      "title": "Chand Pol (Moon Gate)",
+      "type": "Tourist attraction",
+      "address": "Amer Palace and Fort, Amer Rd"
+    },
+    {
+      "position": 16,
+      "rating": 4.6,
+      "reviews": 1.7,
+      "reviews_original": "(1.7L)",
+      "description": "\"The best forts in Jaipur and must go.\"",
+      "lsig": "AB86z5V9bwce0O0B533bNMLVeqSv",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/XiETMw6Ievl1YSHWXv7VoOCRYATZMNp7XeZoE5YUCvM.jpeg",
+      "place_id": "7071178524615540267",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=7071178524615540267&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/081jv3",
+      "gps_coordinates": {
+        "latitude": 26.985487,
+        "longitude": 75.85135
+      },
+      "title": "Amber Palace",
+      "type": "Tourist attraction",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 7 am"
+    },
+    {
+      "position": 17,
+      "rating": 4.4,
+      "reviews": 59000,
+      "reviews_original": "(59K)",
+      "description": "\"One of the greatest monuments in Jaipur.\"",
+      "lsig": "AB86z5UVsKWD5RP0PAgregzr2tgA",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/h3-zbHzJVU08wRdUevMaI-MQpWo980Ch-LcMUOaU3-4.jpeg",
+      "place_id": "4935968491820645216",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=4935968491820645216&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/m/07kctys",
+      "gps_coordinates": {
+        "latitude": 26.925795,
+        "longitude": 75.82367
+      },
+      "title": "The City Palace",
+      "type": "Historical landmark",
+      "address": "Jaipur, Rajasthan",
+      "hours": "Closed · Opens 9:30 am"
+    },
+    {
+      "position": 18,
+      "rating": 4.8,
+      "reviews": 25,
+      "reviews_original": "(25)",
+      "description": "\"This fort see and different body energy 🔥\"",
+      "lsig": "AB86z5UBXTR4PYCsOSf2GaBgcyz8",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/bsHO6JvHj0iZpzC6KYy5cVghLiJhyGPHlnqhrqMqVGc.jpeg",
+      "place_id": "11079233982297336605",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=11079233982297336605&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11j11gd61v",
+      "gps_coordinates": {
+        "latitude": 26.983442,
+        "longitude": 75.84465
+      },
+      "title": "Jaleb Chowk",
+      "type": "Historical landmark",
+      "address": "XRMV+9VC, Jaigarh Rd"
+    },
+    {
+      "position": 19,
+      "rating": 4.6,
+      "reviews": 171,
+      "reviews_original": "(171)",
+      "description": "\"One of the best fort in the world .\"",
+      "lsig": "AB86z5WfUIIzIYsRp2yXCovPoLm-",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/5ulZITYBF3dFQFNuEfGkEMOYq73e3IVCL4gL4NZotto.jpeg",
+      "place_id": "5710010487697997370",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=5710010487697997370&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11c5blxkxc",
+      "gps_coordinates": {
+        "latitude": 26.986061,
+        "longitude": 75.85064
+      },
+      "title": "Ganesh Pol",
+      "type": "Tourist attraction",
+      "address": "JAIGARH FORT, Amer Road, Devisinghpura",
+      "hours": "Closed · Opens 8 am"
+    },
+    {
+      "position": 20,
+      "rating": 4.6,
+      "reviews": 119,
+      "reviews_original": "(119)",
+      "description": "\"Jaigarh Fort is based on ruins.\"",
+      "lsig": "AB86z5U5UhNu2pBuK0eT0KA7m7is",
+      "thumbnail": "https://serpapi.com/searches/69c036b83d3656c48e4ba3ca/images/CcwvmcZROlyUmanDRM0mOrdsx77BSCQf_E8b2-o0f_I.jpeg",
+      "place_id": "9467522604650139724",
+      "place_id_search": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&ludocid=9467522604650139724&q=best+historical+forts+and+monuments+in+Jaipur",
+      "provider_id": "/g/11cn5gbhpg",
+      "gps_coordinates": {
+        "latitude": 26.985739,
+        "longitude": 75.846176
+      },
+      "title": "Garden of Jaigarh Fort",
+      "type": "Tourist attraction",
+      "address": "XRPW+7FV",
+      "hours": "Closed · Opens 9 am"
+    }
+  ],
+  "pagination": {
+    "current": 1,
+    "next": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&start=20&udm=1",
+    "other_pages": {
+      "2": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&start=20&udm=1",
+      "3": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&start=40&udm=1",
+      "4": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&start=60&udm=1",
+      "5": "https://www.google.com/search?q=best+historical+forts+and+monuments+in+Jaipur&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ&hl=en&gl=in&start=80&udm=1"
+    }
+  },
+  "serpapi_pagination": {
+    "current": 1,
+    "next_link": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=20&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ",
+    "next": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=20&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ",
+    "other_pages": {
+      "2": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=20&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ",
+      "3": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=40&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ",
+      "4": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=60&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ",
+      "5": "https://serpapi.com/search.json?device=desktop&engine=google_local&gl=in&google_domain=google.com&hl=en&location=Jaipur%2C+Rajasthan%2C+India&q=best+historical+forts+and+monuments+in+Jaipur&start=80&uule=w+CAIQICIWSmFpcHVyLFJhamFzdGhhbixJbmRpYQ"
+    }
+  }
+}

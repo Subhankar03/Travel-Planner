@@ -26,7 +26,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-
 # ── Constants ──────────────────────────────────────────────────────────────────
 _LOG_DIR = Path(__file__).parent / 'logs'
 _DATE_FMT = '%Y-%m-%d %H:%M:%S'

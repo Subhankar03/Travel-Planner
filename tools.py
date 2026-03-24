@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 
 import serpapi
-from langchain_core.tools import tool
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 load_dotenv()
@@ -200,6 +200,9 @@ def search_flights(
         output['other_flights'] = _summarise_flights(results['other_flights'])
     if 'airports' in results:
         output['airports'] = results['airports']
+    
+    # Add the overall search link for booking
+    output['search_url'] = results.get('search_metadata', {}).get('google_flights_url')
 
     return json.dumps(output, indent=2, ensure_ascii=False)
 
@@ -237,7 +240,8 @@ def search_hotels(
         'adults': str(adults),
         'currency': currency,
     }
-    if children:
+    # `children` is not supported by the vacation-rentals engine
+    if children and not vacation_rentals:
         params['children'] = str(children)
     if sort_by is not None:
         params['sort_by'] = str(sort_by)
@@ -305,6 +309,7 @@ def _summarise_flights(flight_groups: list[dict]) -> list[dict]:
             legs.append({
                 'airline': leg.get('airline'),
                 'flight_number': leg.get('flight_number'),
+                'airline_logo': leg.get('airline_logo'),
                 'departure': f"{leg.get('departure_airport', {}).get('id')} at {leg.get('departure_airport', {}).get('time')}",
                 'arrival': f"{leg.get('arrival_airport', {}).get('id')} at {leg.get('arrival_airport', {}).get('time')}",
                 'duration_min': leg.get('duration'),
@@ -325,12 +330,17 @@ def _summarise_flights(flight_groups: list[dict]) -> list[dict]:
             'total_duration_min': group.get('total_duration'),
             'price': group.get('price'),
             'type': group.get('type'),
+            'airline_logo': group.get('airline_logo'),
+            'booking_token': group.get('booking_token'),
         })
     return summaries
 
 
 def _summarise_hotel(prop: dict) -> dict:
     """Extract the most useful fields from a hotel property."""
+    images = prop.get('images', [])
+    thumbnail = images[0].get('thumbnail') if images else None
+    original_images = [img.get('original_image') for img in images if img.get('original_image')]
     return {
         'name': prop.get('name'),
         'description': prop.get('description'),
@@ -342,6 +352,9 @@ def _summarise_hotel(prop: dict) -> dict:
         'check_in': prop.get('check_in_time'),
         'check_out': prop.get('check_out_time'),
         'amenities': prop.get('amenities', []),
+        'thumbnail': thumbnail,
+        'images': original_images,
+        'link': prop.get('link'),
         'nearby_places': [
             {
                 'name': np.get('name'),
@@ -350,19 +363,22 @@ def _summarise_hotel(prop: dict) -> dict:
             }
             for np in prop.get('nearby_places', [])
         ],
-        'link': prop.get('link'),
     }
 
 
 def _summarise_local(result: dict) -> dict:
     """Extract the most useful fields from a local result."""
+    description = result.get('description')
+    if description:
+        description = description.strip('" ')
     return {
         'title': result.get('title'),
         'type': result.get('type'),
         'rating': result.get('rating'),
         'reviews': result.get('reviews'),
         'price': result.get('price'),
-        'description': result.get('description'),
+        'description': description,
         'address': result.get('address'),
+        'thumbnail': result.get('thumbnail'),
         'service_options': result.get('service_options'),
     }
