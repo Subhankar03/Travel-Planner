@@ -19,7 +19,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from state import TravelState
-from tools import search_flights, search_hotels, search_local_places
+from tools import search_flights, search_hotels, search_local_places, get_route_directions
 
 load_dotenv()
 _PROMPT_DIR = Path(__file__).parent / 'prompts'
@@ -101,9 +101,9 @@ def booking_agent_node(state: TravelState) -> dict:
 
 
 def research_agent_node(state: TravelState) -> dict:
-    """Research agent: finds local restaurants and attractions."""
+    """Research agent: finds local restaurants and attractions, and gets directions."""
     model = ChatGoogleGenerativeAI(model='gemini-3-flash-preview')
-    model_with_tools = model.bind_tools([search_local_places])
+    model_with_tools = model.bind_tools([search_local_places, get_route_directions])
 
     system_template = (_PROMPT_DIR/'research_agent.md').read_text(encoding='utf-8')
     prompt = ChatPromptTemplate.from_messages([
@@ -137,7 +137,7 @@ def route_agent_tools(state: TravelState) -> Literal['booking_tools', 'research_
     if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
         # Determine which tool node based on the tool name
         tool_names = {tc['name'] for tc in last_message.tool_calls}
-        if 'search_local_places' in tool_names:
+        if 'search_local_places' in tool_names or 'get_route_directions' in tool_names:
             return 'research_tools'
         return 'booking_tools'
     # No tool calls → go back to supervisor
@@ -148,7 +148,7 @@ def route_agent_tools(state: TravelState) -> Literal['booking_tools', 'research_
 def build_graph():
     """Build and compile the LangGraph multi-agent workflow."""
     booking_tools = ToolNode([search_flights, search_hotels])
-    research_tools = ToolNode([search_local_places])
+    research_tools = ToolNode([search_local_places, get_route_directions])
 
     graph = StateGraph(TravelState)
 

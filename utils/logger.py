@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-_LOG_DIR = Path(__file__).parent / 'logs'
+_LOG_DIR = Path(__file__).parent.parent / 'logs'
 _DATE_FMT = '%Y-%m-%d %H:%M:%S'
 _FILE_NAME_FMT = 'travel_planner_%Y-%m-%d.log'
 _LOG_RETENTION_DAYS = 7

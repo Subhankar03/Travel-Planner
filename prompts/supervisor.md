@@ -12,6 +12,7 @@ Your job is to route user requests to the correct specialist agent:
    - Find restaurants, cafes, or food spots
    - Discover attractions or things to do
    - Get local recommendations at a destination
+   - **Get directions or travel time between places**
 
 3. **FINISH** — Use this when:
    - The conversation is complete

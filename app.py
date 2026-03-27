@@ -2,6 +2,7 @@
 # ── Imports ────────────────────────────────────────────────────────────────────
 import json
 import os
+import re
 import urllib.parse
 from pathlib import Path
 from typing import Any, cast
@@ -11,7 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from streamlit_js_eval import streamlit_js_eval
 
 from agent import build_graph
-from logger import TravelPlannerLogger
+from utils import TravelPlannerLogger, render_map_in_streamlit
 
 # ── Testing Cache (For rapid UI testing) ───────────────────────────────────────
 # NOTE: This caching system is strictly for testing purposes to avoid hitting 
@@ -76,8 +77,9 @@ with st.sidebar:
         "Hey, it's my anniversary next month and I want to surprise my partner with a luxurious trip from Chennai to Kochi. We want to fly out on a Friday and return on Monday. We are looking for top-tier 5-star hotels or luxury resorts in Kochi, preferably something really highly rated and luxurious. Also, could you find us some romantic fine-dining restaurants and maybe a few quiet, scenic spots or backwater cruise options nearby?",
     ]
     for ex in examples:
-        if st.button(ex, key=f'ex_{hash(ex)}', width='stretch'):
-            st.session_state['prefill'] = ex
+        short_label = ex[:72] + '…' if len(ex) > 72 else ex
+        if st.button(short_label, key=f'ex_{hash(ex)}', width='stretch', help=ex):
+            st.session_state['pending_prefill'] = ex
 
     st.divider()
 
@@ -115,6 +117,9 @@ if 'messages' not in st.session_state:
 if 'tool_results' not in st.session_state:
     st.session_state.tool_results = {}  # msg_index -> list of parsed tool data
 
+if 'traces' not in st.session_state:
+    st.session_state.traces = {}  # msg_index -> list of trace dicts
+
 if 'graph' not in st.session_state:
     with st.spinner('🔧 Initialising agents…'):
         st.session_state.graph = build_graph()
@@ -123,19 +128,25 @@ if 'graph' not in st.session_state:
 if 'logger' not in st.session_state:
     st.session_state.logger = TravelPlannerLogger()
 
+# Latest tool results for the side panel
+if 'latest_spatial_data' not in st.session_state:
+    st.session_state.latest_spatial_data = []
+if 'latest_route_data' not in st.session_state:
+    st.session_state.latest_route_data = None
+
 
 # ── Card Rendering Helpers ─────────────────────────────────────────────────────
 def _render_flight_cards(flights_data: dict) -> None:
     """Render flight results as cards."""
-    # Get the search/booking link
     search_url = flights_data.get('search_url', '')
-    link_html = f' · <a href="{search_url}" target="_blank" style="color:#818cf8; font-size: 0.9rem;">View on Google Flights →</a>' if search_url else ''
 
     all_flights = flights_data.get('best_flights', []) + flights_data.get('other_flights', [])
     if not all_flights:
         return
 
-    st.html(f'<h4 style="color:white; margin-bottom:0.5rem;">✈️ Flights Found{link_html}</h4>')
+    html_parts = []
+    html_parts.append('<details class="custom-details" open><summary class="custom-summary">✈️ Flights Found</summary>')
+    html_parts.append('<div class="details-content">')
     for flight in all_flights[:6]:
         legs = flight.get('legs', [])
         if not legs:
@@ -179,7 +190,7 @@ def _render_flight_cards(flights_data: dict) -> None:
         # Book now button HTML
         book_html = f'<a href="{book_url}" target="_blank" class="book-btn"><span>Book Now →</span></a>' if book_url else ''
 
-        st.html(f"""
+        html_parts.append(f"""
 <div class="result-card">
     <div class="card-img-wrap">{img_inner}</div>
     <div class="card-body">
@@ -202,7 +213,25 @@ def _render_flight_cards(flights_data: dict) -> None:
     </div>
 </div>
         """)
+    html_parts.append('</div></details>')
+    st.html('\n'.join(html_parts))
 
+
+
+# ── Maps Button Helper ─────────────────────────────────────────────────────────
+def _maps_btn(gps: dict | None) -> str:
+    """Return an anchor HTML string that opens Google Maps at given coordinates."""
+    if not gps:
+        return ''
+    lat = gps.get('latitude')
+    lng = gps.get('longitude')
+    if not lat or not lng:
+        return ''
+    url = f'https://www.google.com/maps/search/?api=1&query={lat},{lng}'
+    return (
+        f'<a href="{url}" target="_blank" rel="noopener noreferrer" class="maps-btn">'
+        f'<span>🗺 View in Maps</span></a>'
+    )
 
 
 @st.dialog("Hotel Images", width="large")
@@ -215,12 +244,22 @@ def show_hotel_images(images: list):
     st.html(f'<div class="carousel">{imgs_html}</div>')
 
 
-def _render_hotel_cards(hotels_data: list, msg_idx: int = 0) -> None:
+def _render_hotel_cards(hotels_data: list, msg_idx: int = 0, block_idx: int = 0) -> None:
     """Render hotel results as cards with thumbnails."""
     if not hotels_data:
         return
 
-    st.markdown('#### 🏨 Hotels Found')
+    # First, render hidden buttons for image modal so they exist in the DOM
+    for i, hotel in enumerate(hotels_data[:6]):
+        hotel_images = hotel.get('images', [])
+        if len(hotel_images) > 0:
+            btn_key = f"hotel_img_btn_{msg_idx}_{block_idx}_{i}"
+            if st.button(f"HiddenViewBtn_{msg_idx}_{block_idx}_{i}", key=btn_key, help="View images"):
+                show_hotel_images(hotel_images)
+
+    html_parts = []
+    html_parts.append('<details class="custom-details" open><summary class="custom-summary">🏨 Hotels Found</summary>')
+    html_parts.append('<div class="details-content">')
     for i, hotel in enumerate(hotels_data[:6]):
         thumb = hotel.get('thumbnail')
         name = hotel.get('name', 'Hotel')
@@ -246,7 +285,9 @@ def _render_hotel_cards(hotels_data: list, msg_idx: int = 0) -> None:
         else:
             img_inner = f'<span class="fallback-emoji">🏨</span>{overlay_html}'
 
-        # Book now button
+        # Book now + Maps buttons
+        gps = hotel.get('gps_coordinates')
+        maps_html = _maps_btn(gps)
         book_html = f'<a href="{link}" target="_blank" class="book-btn"><span>Book Now →</span></a>' if link else ''
 
         subtitle_parts = []
@@ -258,7 +299,7 @@ def _render_hotel_cards(hotels_data: list, msg_idx: int = 0) -> None:
             subtitle_parts.append(f'<span class="card-meta">({reviews} reviews)</span>')
         subtitle_html = ' &middot; '.join(subtitle_parts)
 
-        st.html(f"""
+        html_parts.append(f"""
 <div class="result-card">
     <div class="card-img-wrap" id="{img_wrap_id}" style="{cursor_style}">{img_inner}</div>
     <div class="card-body">
@@ -270,24 +311,21 @@ def _render_hotel_cards(hotels_data: list, msg_idx: int = 0) -> None:
             <span class="card-price">{rate}<span style="color:#94a3b8; font-size:0.75rem; font-weight:400;">/night</span></span>
         </div>
         <div class="card-bottom-row">
-            <div>{amenity_badges}</div>{book_html}
+            <div>{amenity_badges}</div>
+            <div style="display:flex; gap:8px; align-items:center;">{maps_html}{book_html}</div>
         </div>
     </div>
 </div>
         """)
 
         if has_images:
-            btn_key = f"hotel_img_btn_{msg_idx}_{i}"
-            if st.button(f"HiddenViewBtn_{msg_idx}_{i}", key=btn_key, help="View images"):
-                show_hotel_images(hotel_images)
-            
-            st.html(f"""
+            html_parts.append(f"""
             <script>
             (function() {{
                 var btns = document.querySelectorAll('button');
                 var myBtn = null;
                 for (var b of btns) {{
-                    if (b.innerText.includes('HiddenViewBtn_{msg_idx}_{i}')) {{
+                    if (b.innerText.includes('HiddenViewBtn_{msg_idx}_{block_idx}_{i}')) {{
                         myBtn = b;
                         let container = b.closest('div[data-testid="stElementContainer"]');
                         if (container) container.style.display = 'none';
@@ -300,15 +338,24 @@ def _render_hotel_cards(hotels_data: list, msg_idx: int = 0) -> None:
                 }}
             }})();
             </script>
-            """, unsafe_allow_javascript=True)
+            """)
+
+    html_parts.append('</div></details>')
+    st.html('\n'.join(html_parts), unsafe_allow_javascript=True)
 
 
-def _render_place_cards(places_data: list) -> None:
+def _render_place_cards(places_data: list, category_label: str = 'Places Found') -> None:
     """Render local place results as cards with thumbnails."""
     if not places_data:
         return
 
-    st.markdown('#### 📍 Places Found')
+    display_label = category_label
+    if not display_label.lower().endswith("found"):
+        display_label = f"{category_label} found"
+
+    html_parts = []
+    html_parts.append(f'<details class="custom-details" open><summary class="custom-summary">📍 {display_label}</summary>')
+    html_parts.append('<div class="details-content">')
     for place in places_data[:8]:
         thumb = place.get('thumbnail')
         title = place.get('title', 'Place')
@@ -343,7 +390,10 @@ def _render_place_cards(places_data: list) -> None:
             subtitle_parts.append(f'<span class="card-meta">({reviews} reviews)</span>')
         subtitle_html = ' &middot; '.join(subtitle_parts)
 
-        st.html(f"""
+        gps_place = place.get('gps_coordinates')
+        maps_html_place = _maps_btn(gps_place)
+
+        html_parts.append(f"""
 <div class="result-card">
     <div class="card-img-wrap">{img_inner}</div>
     <div class="card-body">
@@ -355,40 +405,190 @@ def _render_place_cards(places_data: list) -> None:
         </div>
         <div class="card-bottom-row" style="margin-top:0;">
             {desc_html}
+            <div style="display:flex; justify-content:flex-end; margin-top:6px;">{maps_html_place}</div>
         </div>
     </div>
 </div>
         """)
+    html_parts.append('</div></details>')
+    st.html('\n'.join(html_parts))
 
 
 def _render_tool_results(tool_data_list: list, msg_idx: int = 0) -> None:
     """Route tool results to the correct card renderer."""
-    for item in tool_data_list:
+    spatial_data = []
+    for block_idx, item in enumerate(tool_data_list):
         tool_name = item.get('tool_name', '')
         data = item.get('data')
         if not data:
             continue
+            
         if tool_name == 'search_flights':
             _render_flight_cards(data)
         elif tool_name == 'search_hotels':
-            _render_hotel_cards(data, msg_idx)
+            _render_hotel_cards(data, msg_idx, block_idx)
+            for p in data:
+                p['category'] = 'Hotels'
+            spatial_data.extend(data)
         elif tool_name == 'search_local_places':
-            _render_place_cards(data)
+            # Handle new format (dict with category_label) and old format (list fallback)
+            if isinstance(data, dict):
+                label = data.get('category_label', 'Places Found')
+                places = data.get('places', [])
+            else:
+                label = 'Places Found'
+                places = data
+
+            _render_place_cards(places, category_label=label)
+            
+            # Inject category into places for map differentiation
+            for p in places:
+                p['category'] = label
+                
+            spatial_data.extend(places)
+        elif tool_name == 'get_route_directions':
+            _render_route_summary(data)
+            
+    if spatial_data:
+        st.session_state.latest_spatial_data = spatial_data
+        with st.container(border=True):
+            st.markdown("### 📍 Location Map")
+            render_map_in_streamlit(spatial_data, key=f"map_{msg_idx}")
 
 
-# ── Display Chat History ───────────────────────────────────────────────────────
-for i, msg in enumerate(st.session_state.messages):
-    role = 'user' if isinstance(msg, HumanMessage) else 'assistant'
-    with st.chat_message(role):
-        content = getattr(msg, 'text', msg.content)
-        st.markdown(content)
-        # If this message has associated tool results, render cards
-        if i in st.session_state.tool_results:
-            _render_tool_results(st.session_state.tool_results[i], i)
+def _render_route_summary(route_data: dict) -> None:
+    """Render a rich, premium route summary card in the chat."""
+    if not route_data:
+        return
+
+    origin  = route_data.get('origin', 'Origin')
+    dest    = route_data.get('destination', 'Destination')
+    dist    = route_data.get('distance', '—')
+    dur     = route_data.get('duration', '—')
+    summary = route_data.get('summary', '')
+    steps   = route_data.get('steps', [])
+    mode    = route_data.get('mode', 'driving')
+
+    _MODE_ICON = {'driving': '🚗', 'walking': '🚶', 'transit': '🚌', 'bicycling': '🚲'}
+    mode_icon = _MODE_ICON.get(mode, '🧭')
+
+    # Strip HTML tags from step instructions
+    def _strip(html: str) -> str:
+        return re.sub(r'<[^>]+>', ' ', html).strip()
+
+    steps_html = ''
+    for i, step in enumerate(steps[:5], 1):
+        instr = _strip(step.get('instruction', ''))
+        sdist = step.get('distance', '')
+        steps_html += f"""
+        <div class="route-step-row">
+            <div class="route-step-number">{i}</div>
+            <div class="route-step-content">
+                <span class="route-step-instruction">{instr}</span>
+                <span class="route-step-distance">· {sdist}</span>
+            </div>
+        </div>"""
+
+    steps_section = f"""
+        <div class="route-steps-section">
+            <div class="route-steps-title">Turn-by-turn</div>
+            {steps_html}
+        </div>""" if steps_html else ''
+
+    via_line = f'<div class="route-via-line">via {summary}</div>' if summary else ''
+
+    st.html(f"""
+    <div class="route-summary-card">
+
+        <!-- Header row -->
+        <div class="route-header-row">
+            <div class="route-header-icon">{mode_icon}</div>
+            <div>
+                <div class="route-header-title">Route Found</div>
+                <div class="route-header-subtitle">Directions · {mode.title()}</div>
+            </div>
+        </div>
+
+        <!-- Origin → Destination -->
+        <div class="route-locations-row">
+            <div class="route-origin-badge" title="{origin}">{origin}</div>
+            <div class="route-arrow">→</div>
+            <div class="route-destination-badge" title="{dest}">{dest}</div>
+        </div>
+        {via_line}
+
+        <!-- Stats row -->
+        <div class="route-stats-row">
+            <div class="route-stat-box">
+                <span class="route-stat-icon">📏</span>
+                <div>
+                    <div class="route-stat-label">Distance</div>
+                    <div class="route-stat-value">{dist}</div>
+                </div>
+            </div>
+            <div class="route-stat-box">
+                <span class="route-stat-icon">⏱️</span>
+                <div>
+                    <div class="route-stat-label">Duration</div>
+                    <div class="route-stat-value">{dur}</div>
+                </div>
+            </div>
+        </div>
+
+        {steps_section}
+    </div>
+    """, unsafe_allow_javascript=True)
+
+
+# ── Main Layout ────────────────────────────────────────────────────────────────
+# ── Display Chat History ───────────────────────────────────────────────────
+chat_container = st.container()
+with chat_container:
+    for i, msg in enumerate(st.session_state.messages):
+        role = 'user' if isinstance(msg, HumanMessage) else 'assistant'
+        with st.chat_message(role):
+            content = getattr(msg, 'text', msg.content)
+
+            # If this is an assistant message, render its research traces
+            if role == 'assistant' and i in st.session_state.traces:
+                with st.status('Researched', state='complete', expanded=False):
+                    for step in st.session_state.traces[i]:
+                        for line in step.get('friendly_items', []):
+                            with st.expander(line['text'], expanded=False):
+                                if line.get('data'):
+                                    st.json(line['data'], expanded=1)
+
+            # If this message has associated tool results, render cards
+            if i in st.session_state.tool_results:
+                _render_tool_results(st.session_state.tool_results[i], i)
+            st.markdown(content)
+
 
 # ── Chat Input ─────────────────────────────────────────────────────────────────
-prefill = st.session_state.pop('prefill', None)
-user_input = st.chat_input('Where would you like to travel?') or prefill
+# Handle chat input outside columns to keep it fixed at the bottom (Standard Streamlit)
+# ── Example prompt prefill via JS ─────────────────────────────────────────────
+# st.chat_input has no `value` param, so we inject the text into the DOM instead.
+pending = st.session_state.pop('pending_prefill', None)
+if pending:
+    # Escape for JS string literal
+    escaped = pending.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+    st.html(f"""
+    <script>
+        (function tryInject() {{
+            const inputs = document.querySelectorAll('textarea[data-testid="stChatInputTextArea"]');
+            if (inputs.length === 0) {{ setTimeout(tryInject, 150); return; }}
+            const input = inputs[inputs.length - 1];
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLTextAreaElement.prototype, 'value'
+            ).set;
+            nativeInputValueSetter.call(input, `{escaped}`);
+            input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            input.focus();
+        }})();
+    </script>
+    """, unsafe_allow_javascript=True)
+
+user_input = st.chat_input('Where would you like to travel?')
 
 if user_input:
     # Display user message
@@ -413,11 +613,11 @@ if user_input:
             ai_text = cached_turn['ai_response']
             tool_data_list = cached_turn['tool_data_list']
             
-            st.markdown(ai_text)
-            
             if tool_data_list:
                 msg_idx = len(st.session_state.messages)
                 _render_tool_results(tool_data_list, msg_idx)
+                
+            st.markdown(ai_text)
                 
             cached_ai_msg = AIMessage(content=ai_text)
             st.session_state.messages.append(cached_ai_msg)
@@ -430,11 +630,32 @@ if user_input:
     else:
         # Run the graph
         with st.chat_message('assistant'):
-            status_container = st.status('✨ Thinking…', expanded=True)
+            status_container = st.status('Researching…', expanded=False)
 
+            current_traces = []
             tool_data_list = []
             final_ai_response = None
             _seen_tool_ids: set[str] = set()
+
+            # ── Label & phrase maps ──────────────────────────────────────────────
+            # Nodes to silently skip logging/displaying if they have no messages
+            _SKIP_NODES = {'supervisor'}
+
+            # Human-friendly tool call phrases
+            _TOOL_CALL_PHRASES = {
+                'search_flights':       '🛫 Searching for flights',
+                'search_hotels':        '🏨 Searching for hotels',
+                'search_local_places':  '📍 Looking up local places',
+                'get_route_directions': '🗺️ Getting route directions',
+            }
+
+            # Human-friendly tool output phrases
+            _TOOL_OUTPUT_PHRASES = {
+                'search_flights':       'Flight results',
+                'search_hotels':        'Hotel results',
+                'search_local_places':  'Local places',
+                'get_route_directions': 'Route details',
+            }
 
             # ── Stream updates and log incrementally ────────────────────────────
             for chunk in st.session_state.graph.stream(
@@ -446,56 +667,100 @@ if user_input:
                 stream_mode='updates',
             ):
                 for node_name, node_output in chunk.items():
-                    # Update status to show current node
-                    status_container.update(label=f'✨ Thinking… (Current: {node_name})')
-                    
-                    # Log node
+
+                    # Silently skip internal routing nodes
+                    if node_name in _SKIP_NODES:
+                        _log.log_node(node_name)
+                        continue
+
                     _log.log_node(node_name)
+
+                    # Update top-level status header
+                    status_container.update(
+                        label='Researching…',
+                    )
 
                     if not node_output or not isinstance(node_output, dict):
                         continue
 
                     node_messages = node_output.get('messages', [])
+
+                    # ── Collect tool calls & outputs ────────────────────────────
+                    node_tool_calls: list[dict] = []
+                    node_tool_outputs: list[dict] = []
+                    friendly_lines: list[str] = []
+
                     for msg in node_messages:
                         if isinstance(msg, AIMessage):
-                            # Log any tool calls embedded in AI messages
                             for tc in getattr(msg, 'tool_calls', []) or []:
                                 tc_id = tc.get('id', '')
                                 if tc_id not in _seen_tool_ids:
                                     _seen_tool_ids.add(tc_id)
                                     _log.log_tool_call(tc.get('name', 'unknown'), tc.get('args'))
+                                    node_tool_calls.append(tc)
                             if msg.content:
                                 final_ai_response = msg
+
                         elif isinstance(msg, ToolMessage):
                             _log.log_tool_output(msg.name or 'tool', msg.content)
-
-                            # Extract tool results for card rendering
-                            if isinstance(msg.content, str):
+                            raw_output = msg.content
+                            parsed_output = None
+                            if isinstance(raw_output, str):
                                 try:
-                                    parsed = json.loads(msg.content)
+                                    parsed_output = json.loads(raw_output)
                                     tool_data_list.append({
                                         'tool_name': msg.name,
-                                        'data': parsed,
+                                        'data': parsed_output,
                                     })
                                 except (json.JSONDecodeError, TypeError):
                                     pass
+                            node_tool_outputs.append({
+                                'name': msg.name or 'tool',
+                                'raw': raw_output,
+                                'parsed': parsed_output,
+                            })
 
-            status_container.update(label='✨ Finished!', state='complete', expanded=False)
+                    # ── Build friendly items for this step ──────────────────────
+                    friendly_items: list[dict] = []
+                    for tc in node_tool_calls:
+                        phrase = _TOOL_CALL_PHRASES.get(tc.get('name', ''), f'🔧 Running {tc.get("name", "tool")}…')
+                        friendly_items.append({'text': phrase, 'data': tc.get('args')})
+                    
+                    for out in node_tool_outputs:
+                        phrase = _TOOL_OUTPUT_PHRASES.get(out['name'], f'📦 Got output from {out["name"]}')
+                        # Prefer parsed JSON for the data display
+                        data = out['parsed'] if out['parsed'] is not None else out['raw']
+                        friendly_items.append({'text': phrase, 'data': data})
+
+                    # ── Render as separate expanders ──────────────────
+                    if friendly_items:
+                        for item in friendly_items:
+                            with status_container.expander(item['text'], expanded=False):
+                                if item.get('data'):
+                                    st.json(item['data'], expanded=1)
+
+                    current_traces.append({
+                        'friendly_items': friendly_items,
+                    })
+
+            status_container.update(label='Done', state='complete', expanded=True)
 
             if final_ai_response and final_ai_response.content:
                 ai_text = getattr(final_ai_response, 'text', final_ai_response.content)
                 if not isinstance(ai_text, str):
                     ai_text = str(ai_text)
 
-                st.markdown(ai_text)
-
-                # Log the AI's final response
-                _log.log_ai(ai_text)
+                msg_idx = len(st.session_state.messages)
+                st.session_state.traces[msg_idx] = current_traces
 
                 # Render cards if we have structured tool data
                 if tool_data_list:
-                    msg_idx = len(st.session_state.messages)
                     _render_tool_results(tool_data_list, msg_idx)
+
+                st.markdown(ai_text)
+                
+                # Log the AI's final response
+                _log.log_ai(ai_text)
 
                 st.session_state.messages.append(final_ai_response)
 

@@ -4,12 +4,14 @@ import os
 from pathlib import Path
 
 import serpapi
+import googlemaps
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 load_dotenv()
 _client = serpapi.Client(api_key=os.getenv('SERPAPI_KEY'))
+_gmaps = googlemaps.Client(key=os.getenv('GOOGLE_MAPS_API_KEY'))
 
 
 # ── Schema Data ────────────────────────────────────────────────────────────────
@@ -147,6 +149,25 @@ class SearchLocalPlacesInput(BaseModel):
     location: str = Field(
         description='Location from which the search should originate. Specify at the city level for best results (e.g. "Bangalore, Karnataka, India", "Paris, France").'
     )
+    category_label: str = Field(
+        default="Places",
+        description='A short 2-3 word label summarizing exactly what you are searching for. This will be shown in the UI. (e.g. "Rajasthani thali", "Historical forts").'
+    )
+
+
+class GetRouteDirectionsInput(BaseModel):
+    """Input schema for the get_route_directions tool."""
+
+    origin: str = Field(
+        description='Origin location (e.g. "Delhi Airport", "Taj Mahal", "Hotel name").'
+    )
+    destination: str = Field(
+        description='Destination location (e.g. "Agra Fort", "Restaurant name").'
+    )
+    mode: str = Field(
+        default='driving',
+        description='Mode of transport: "driving", "walking", "transit", or "bicycling".'
+    )
 
 
 # ── Tools ──────────────────────────────────────────────────────────────────────
@@ -277,10 +298,11 @@ def search_hotels(
 def search_local_places(
     query: str,
     location: str,
+    category_label: str = "Places",
 ) -> str:
     """Search for local places (restaurants, attractions, etc.) via Google Local.
 
-    Returns a JSON string with local results including name, rating, address, etc.
+    Returns a JSON string containing the category_label and the local results (Name, Rating, Address, etc).
     """
     params: dict = {
         'engine': 'google_local',
@@ -294,9 +316,58 @@ def search_local_places(
     results = _client.search(params)
 
     local_results = results.get('local_results', [])
-    output = [_summarise_local(r) for r in local_results[:10]]
+    
+    # Return both the label and the places so the UI can group them
+    output = {
+        "category_label": category_label,
+        "places": [_summarise_local(r) for r in local_results[:10]]
+    }
 
     return json.dumps(output, indent=2, ensure_ascii=False)
+
+
+@tool(args_schema=GetRouteDirectionsInput)
+def get_route_directions(
+    origin: str,
+    destination: str,
+    mode: str = 'driving',
+) -> str:
+    """Get natural language directions and travel time between two locations.
+
+    Returns a JSON string with distance, duration, and key steps.
+    """
+    try:
+        directions_result = _gmaps.directions(  # type: ignore[attr-defined]
+            origin,
+            destination,
+            mode=mode,
+            departure_time='now' if mode == 'transit' else None
+        )
+        
+        if not directions_result:
+            return "No routes found."
+
+        route = directions_result[0]
+        leg = route['legs'][0]
+        
+        output = {
+            'origin': leg['start_address'],
+            'destination': leg['end_address'],
+            'distance': leg['distance']['text'],
+            'duration': leg['duration']['text'],
+            'summary': route.get('summary', ''),
+            'steps': [
+                {
+                    'instruction': s['html_instructions'],
+                    'distance': s['distance']['text'],
+                    'duration': s['duration']['text']
+                } for s in leg['steps'][:5]  # Truncate to avoid context bloat
+            ]
+        }
+        
+        return json.dumps(output, indent=2, ensure_ascii=False)
+    except Exception as e:
+        return f"Error fetching directions: {str(e)}"
 
 
 # ── Summarisers ────────────────────────────────────────────────────────────────
@@ -355,6 +426,7 @@ def _summarise_hotel(prop: dict) -> dict:
         'thumbnail': thumbnail,
         'images': original_images,
         'link': prop.get('link'),
+        'gps_coordinates': prop.get('gps_coordinates'),
         'nearby_places': [
             {
                 'name': np.get('name'),
@@ -380,5 +452,6 @@ def _summarise_local(result: dict) -> dict:
         'description': description,
         'address': result.get('address'),
         'thumbnail': result.get('thumbnail'),
+        'gps_coordinates': result.get('gps_coordinates'),
         'service_options': result.get('service_options'),
     }
