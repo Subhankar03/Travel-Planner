@@ -8,7 +8,7 @@ from typing import Literal
 
 import requests
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
@@ -42,37 +42,66 @@ def get_current_location() -> str:
 
 # ── Agent Nodes ────────────────────────────────────────────────────────────────
 def supervisor_node(state: TravelState) -> dict:
-    """Supervisor decides which specialist agent should handle the request."""
-    model = ChatGoogleGenerativeAI(model='gemini-3.1-flash-lite-preview')
-    system_template = (_PROMPT_DIR/'supervisor.md').read_text(encoding='utf-8')
+    """Supervisor decides which specialist agent should handle the request.
 
-    # Ask the model to choose the next agent
+    Routing options:
+    - booking_agent   → flight / hotel / itinerary requests
+    - research_agent  → local discovery / directions requests
+    - DIRECT_RESPONSE → general / meta questions answered by the supervisor
+    - FINISH          → conversation complete
+    """
+    model = ChatGoogleGenerativeAI(model='gemini-3.1-flash-lite-preview')
+    system_template = (_PROMPT_DIR / 'supervisor.md').read_text(encoding='utf-8')
+
+    # ── Step 1: routing decision ───────────────────────────────────────────────
     routing_instructions = (
-        'Given the conversation above, who should act next?\n'
-        "Choose one of: 'booking_agent', 'research_agent', 'FINISH'\n"
-        'Respond with ONLY the name of the agent (or FINISH), nothing else.'
+        'Given the conversation above, what should happen next?\n'
+        "Choose EXACTLY ONE of: 'booking_agent', 'research_agent', "
+        "'DIRECT_RESPONSE', 'FINISH'\n"
+        'Reply with ONLY that word — nothing else.'
     )
 
-    prompt = ChatPromptTemplate.from_messages([
+    routing_prompt = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(system_template),
-        MessagesPlaceholder(variable_name="messages"),
-        SystemMessage(content=routing_instructions)
+        MessagesPlaceholder(variable_name='messages'),
+        HumanMessage(content=routing_instructions),
     ])
 
-    response = model.invoke(prompt.invoke({
-        "messages": state['messages']
+    routing_response = model.invoke(routing_prompt.invoke({
+        'messages': state['messages'],
     }))
 
-    # Parse the response to get the next agent
-    next_agent = response.text.strip().lower()
+    raw = routing_response.text.strip().lower()
 
-    # Normalise the response
-    if 'booking' in next_agent:
+    if 'booking' in raw:
         next_agent = 'booking_agent'
-    elif 'research' in next_agent:
+    elif 'research' in raw:
         next_agent = 'research_agent'
+    elif 'direct' in raw:
+        next_agent = 'DIRECT_RESPONSE'
     else:
         next_agent = 'FINISH'
+
+    # ── Step 2: if direct response, generate the reply now ────────────────────
+    if next_agent == 'DIRECT_RESPONSE':
+        reply_instructions = (
+            'The user asked a general or meta question. '
+            'Using your knowledge of the system capabilities described in your system prompt, '
+            'compose a helpful, friendly reply in markdown. '
+            'Do NOT mention internal agent names or technical routing details.'
+        )
+        reply_prompt = ChatPromptTemplate.from_messages([
+            SystemMessagePromptTemplate.from_template(system_template),
+            MessagesPlaceholder(variable_name='messages'),
+            HumanMessage(content=reply_instructions),
+        ])
+        reply_response = model.invoke(reply_prompt.invoke({
+            'messages': state['messages'],
+        }))
+        return {
+            'next': 'DIRECT_RESPONSE',
+            'messages': [AIMessage(content=reply_response.text.strip())],
+        }
 
     return {'next': next_agent}
 
@@ -126,7 +155,7 @@ def research_agent_node(state: TravelState) -> dict:
 def route_supervisor(state: TravelState) -> str:
     """Route based on the supervisor's decision stored in state."""
     next_agent = state.get('next', 'FINISH')
-    if next_agent == 'FINISH':
+    if next_agent in ('FINISH', 'DIRECT_RESPONSE'):
         return END
     return next_agent
 
@@ -162,14 +191,14 @@ def build_graph():
     # Entry point
     graph.add_edge(START, 'supervisor')
 
-    # Supervisor routes to an agent or finishes
+    # Supervisor routes to an agent, answers directly, or finishes
     graph.add_conditional_edges(
         'supervisor',
         route_supervisor,
         {
             'booking_agent': 'booking_agent',
             'research_agent': 'research_agent',
-            END: END,
+            END: END,  # covers both FINISH and DIRECT_RESPONSE
         },
     )
 

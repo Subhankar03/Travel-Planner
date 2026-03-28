@@ -49,7 +49,7 @@ flowchart TD
 
 - **Supervisor Agent**: Routes user queries to the appropriate agent
 - **Booking Agent**: Handles flights, hotels, and itinerary planning
-- **Research Agent**: Handles local discovery (restaurants, attractions)
+- **Research Agent**: Handles local discovery (restaurants, attractions) and routes
 - **Tool Nodes**: Execute API calls via SerpAPI
 
 The system is implemented using a LangGraph state machine where agents and tools interact dynamically based on user intent.
