@@ -17,6 +17,9 @@ dependencies = [
     "requests>=2.32.5",
     "streamlit-js-eval>=1.0.0",
     "prompt-toolkit>=3.0.52",
+    "googlemaps",
+    "fastapi>=0.135.2",
+    "uvicorn>=0.42.0",
 ]
 
 [dependency-groups]

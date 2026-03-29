@@ -174,7 +174,7 @@ def route_agent_tools(state: TravelState) -> Literal['booking_tools', 'research_
 
 
 # ── Graph Builder ──────────────────────────────────────────────────────────────
-def build_graph():
+def build_graph(checkpointer=None):
     """Build and compile the LangGraph multi-agent workflow."""
     booking_tools = ToolNode([search_flights, search_hotels])
     research_tools = ToolNode([search_local_places, get_route_directions])
@@ -224,4 +224,4 @@ def build_graph():
     graph.add_edge('booking_tools', 'booking_agent')
     graph.add_edge('research_tools', 'research_agent')
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)
