@@ -121,7 +121,7 @@ def main() -> None:
     messages: list = []
     last_trace: list = []
 
-    # Initialise session logger
+    # Initialize session logger
     logger = TravelPlannerLogger()
 
     print_welcome(console)
@@ -234,7 +234,7 @@ def main() -> None:
                                     )
                                 if msg.text:
                                     final_ai_content = msg.text
-        except Exception:
+        except Exception:  # noqa
             console.print_exception(show_locals=False)
             continue
 

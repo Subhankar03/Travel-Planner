@@ -15,7 +15,8 @@ wheels/
 # Environment secrets
 .env
 
-# Temporary scripts
+# Temporary files
+technical_walkthrough.md
 temp.py
 
 # Logs

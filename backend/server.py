@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,7 +33,7 @@ app = FastAPI(
 
 # CORS — permissive during development; lock down in production
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,     # noqa
     allow_origins=['*'],
     allow_credentials=True,
     allow_methods=['*'],
@@ -58,7 +58,7 @@ if _FRONTEND_DIR.is_dir():
     app.mount('/assets', StaticFiles(directory=_FRONTEND_DIR / 'assets'), name='assets')
 
     @app.get('/{full_path:path}')
-    async def serve_spa(request: Request, full_path: str) -> FileResponse:
+    async def serve_spa(full_path: str) -> FileResponse:
         """Catch-all: serve index.html for client-side routing."""
         file_path = _FRONTEND_DIR / full_path
         if file_path.is_file():

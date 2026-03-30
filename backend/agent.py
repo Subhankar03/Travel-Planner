@@ -36,7 +36,7 @@ def get_current_location() -> str:
         city = data.get("city", "Unknown City")
         region = data.get("region", "Unknown Region")
         return f"{city}, {region}"
-    except Exception:
+    except requests.RequestException, ValueError:
         return "Unknown Location"
 
 
@@ -179,12 +179,12 @@ def build_graph(checkpointer=None):
     booking_tools = ToolNode([search_flights, search_hotels])
     research_tools = ToolNode([search_local_places, get_route_directions])
 
-    graph = StateGraph(TravelState)
+    graph = StateGraph(TravelState)     # noqa
 
     # Add nodes
-    graph.add_node('supervisor', supervisor_node)
-    graph.add_node('booking_agent', booking_agent_node)
-    graph.add_node('research_agent', research_agent_node)
+    graph.add_node('supervisor', supervisor_node)     # noqa
+    graph.add_node('booking_agent', booking_agent_node)     # noqa
+    graph.add_node('research_agent', research_agent_node)     # noqa
     graph.add_node('booking_tools', booking_tools)
     graph.add_node('research_tools', research_tools)
 

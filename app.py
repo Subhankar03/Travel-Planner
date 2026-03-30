@@ -128,7 +128,7 @@ if "graph" not in st.session_state:
     with st.spinner("🔧 Initialising agents…"):
         st.session_state.graph = build_graph()
 
-# Initialise the session logger once per browser session
+# Initialize the session logger once per browser session
 if "logger" not in st.session_state:
     st.session_state.logger = TravelPlannerLogger()
 
@@ -150,11 +150,8 @@ def _render_flight_cards(flights_data: dict) -> None:
     if not all_flights:
         return
 
-    html_parts = []
-    html_parts.append(
-        '<details class="custom-details" open><summary class="custom-summary">✈️ Flights Found</summary>'
-    )
-    html_parts.append('<div class="details-content">')
+    html_parts = ['<details class="custom-details" open><summary class="custom-summary">✈️ Flights Found</summary>',
+                  '<div class="details-content">']
     for flight in all_flights[:6]:
         legs = flight.get("legs", [])
         if not legs:
@@ -285,11 +282,8 @@ def _render_hotel_cards(
             ):
                 show_hotel_images(hotel_images)
 
-    html_parts = []
-    html_parts.append(
-        '<details class="custom-details" open><summary class="custom-summary">🏨 Hotels Found</summary>'
-    )
-    html_parts.append('<div class="details-content">')
+    html_parts = ['<details class="custom-details" open><summary class="custom-summary">🏨 Hotels Found</summary>',
+                  '<div class="details-content">']
     for i, hotel in enumerate(hotels_data[:6]):
         thumb = hotel.get("thumbnail")
         name = hotel.get("name", "Hotel")
@@ -391,11 +385,8 @@ def _render_place_cards(
     if not display_label.lower().endswith("found"):
         display_label = f"{category_label} found"
 
-    html_parts = []
-    html_parts.append(
-        f'<details class="custom-details" open><summary class="custom-summary">📍 {display_label}</summary>'
-    )
-    html_parts.append('<div class="details-content">')
+    html_parts = [f'<details class="custom-details" open><summary class="custom-summary">📍 {display_label}</summary>',
+                  '<div class="details-content">']
     for place in places_data[:8]:
         thumb = place.get("thumbnail")
         title = place.get("title", "Place")
@@ -642,7 +633,7 @@ if pending:
         unsafe_allow_javascript=True,
     )
 
-user_input = st.chat_input("Where would you like to travel?")
+user_input = st.chat_input("Where would you like to travel?")  # noqa
 
 if user_input:
     # Display user message
@@ -664,8 +655,8 @@ if user_input:
     if cached_turn:
         with st.chat_message("assistant"):
             st.info("⚡ **Testing Cache Hit:** Loaded response instantly!")
-            ai_text = cached_turn["ai_response"]
-            tool_data_list = cached_turn["tool_data_list"]
+            ai_text = cached_turn["ai_response"]    # noqa
+            tool_data_list = cached_turn["tool_data_list"]    # noqa
 
             if tool_data_list:
                 msg_idx = len(st.session_state.messages)
