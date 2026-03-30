@@ -16,8 +16,8 @@ from rich.rule import Rule
 from rich.text import Text
 from rich.traceback import install
 
-from agent import build_graph
-from utils import TravelPlannerLogger
+from backend.agent import build_graph
+from backend.utils import TravelPlannerLogger
 
 install()
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from langgraph.checkpoint.memory import MemorySaver
 
-from agent import build_graph
+from backend.agent import build_graph
 
 
 # ── Module-level state ────────────────────────────────────────────────────────

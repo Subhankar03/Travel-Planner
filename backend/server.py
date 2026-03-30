@@ -13,11 +13,11 @@ from backend.core.graph import init_graph, shutdown_graph
 from backend.routes.chat import router as chat_router
 
 
-# ── Lifespan (Redis init / teardown) ──────────────────────────────────────────
+# ── Lifespan (Graph init / teardown) ──────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Startup: connect to Redis and compile the graph.
-    Shutdown: close Redis cleanly.
+    """Startup: compile the graph with MemorySaver.
+    Shutdown: run any necessary cleanup.
     """
     await init_graph()
     yield

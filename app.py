@@ -12,8 +12,8 @@ import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from streamlit_js_eval import streamlit_js_eval
 
-from agent import build_graph
-from utils import TravelPlannerLogger, render_map_in_streamlit
+from backend.agent import build_graph
+from backend.utils import TravelPlannerLogger, render_map_in_streamlit
 
 # ── Testing Cache (For rapid UI testing) ───────────────────────────────────────
 # NOTE: This caching system is strictly for testing purposes to avoid hitting

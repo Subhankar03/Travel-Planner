@@ -18,8 +18,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
-from state import TravelState
-from tools import search_flights, search_hotels, search_local_places, get_route_directions
+from backend.state import TravelState
+from backend.tools import search_flights, search_hotels, search_local_places, get_route_directions
 
 load_dotenv()
 _PROMPT_DIR = Path(__file__).parent / 'prompts'

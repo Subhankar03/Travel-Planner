@@ -1,4 +1,4 @@
-# I Multi-Agent Travel Planner
+# ✈️ Multi-Agent Travel Planner
 
 A multi-agent AI travel assistant that plans entire trips — flights, stays, places, and routes — in one conversation.
 
@@ -14,14 +14,14 @@ It is a multi-agent travel planner that enables users to plan trips using natura
 
 ## ✨ Key Features
 
-- Natural language trip planning
-- Multi-agent architecture with task specialization
-- Flight and hotel search using real-time data
-- Local attractions and restaurant discovery
-- Route planning between locations (maps integration)
-- Streamlit-based interactive UI
-- CLI interface for testing and debugging
-- Observability with detailed execution logs
+- **Natural language trip planning**
+- **Multi-agent architecture** with task specialization
+- **Flight and hotel search** using real-time data
+- **Local attractions and restaurant discovery**
+- **Route planning** between locations (maps integration)
+- **FastAPI Backend** exposing a responsive, asynchronous API
+- **Real-time Streaming** via the Vercel AI SDK (`x-vercel-ai-ui-message-stream: v1`) protocol over SSE
+- **Observability** with detailed execution logs
 
 ---
 
@@ -29,8 +29,10 @@ It is a multi-agent travel planner that enables users to plan trips using natura
 
 ```mermaid
 flowchart TD
-    User([User]) --> Streamlit[Streamlit UI]
-    Streamlit --> Supervisor[Supervisor Agent]
+    User([User]) --> Frontend[React Frontend]
+    Frontend -->|SSE Stream| FastAPI[FastAPI Backend]
+    FastAPI --> LangGraph[LangGraph State Machine]
+    LangGraph --> Supervisor[Supervisor Agent]
   
     Supervisor -->|Booking/Itinerary| Booking[Travel Booking Agent]
     Supervisor -->|Local Info/Research| Research[Local Research Agent]
@@ -42,43 +44,50 @@ flowchart TD
   
     Booking --> Supervisor
     Research --> Supervisor
-    Supervisor --> Streamlit
+    LangGraph --> FastAPI
 ```
 
 ### Agent Workflow
 
-- **Supervisor Agent**: Routes user queries to the appropriate agent
-- **Booking Agent**: Handles flights, hotels, and itinerary planning
-- **Research Agent**: Handles local discovery (restaurants, attractions) and routes
-- **Tool Nodes**: Execute API calls via SerpAPI
-
-The system is implemented using a LangGraph state machine where agents and tools interact dynamically based on user intent.
+- **Supervisor Agent**: Routes user queries to the appropriate specialized agent.
+- **Booking Agent**: Handles flights, hotels, and itinerary planning.
+- **Research Agent**: Handles local discovery (restaurants, attractions, routes).
+- **Tool Nodes**: Execute remote API calls via SerpAPI.
+- **Checkpointer**: Uses `MemorySaver` to persist conversation histories for the lifespan of the server process.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- Python
-- LangGraph (multi-agent orchestration)
-- Google Gemini (LLM)
-- SerpAPI (Flights, Hotels, Local search)
-- Streamlit (Frontend UI)
-- Rich + Prompt Toolkit (CLI interface)
+- **Backend core**: Python, LangGraph, standard `MemorySaver` checkpointer
+- **LLM**: Google Gemini
+- **Tools**: SerpAPI (Flights, Hotels, Local search), Google Maps
+- **API Server**: FastAPI, Uvicorn
+- **Streaming**: Vercel AI SDK DataStream Protocol
+- **Legacy UI**: Streamlit
+- **Upcoming UI**: React, Vite, TailwindCSS
 
 ---
 
 ## 📂 Project Structure
 
-- [agent.py](./agent.py) — Builds the LangGraph multi-agent workflow
-- [app.py](./app.py) — Streamlit frontend UI
-- [main.py](./main.py) — CLI interface for testing
-- [tools.py](./tools.py) — SerpAPI tool integrations
-- [logger.py](./logger.py) — Logging and observability system
-- [state.py](./state.py) — Graph state and schema definitions
-- [styles.css](./styles.css) — Custom CSS styling for the Streamlit UI
-- [pyproject.toml](./pyproject.toml) — Project dependencies and metadata configuration
-- [serpapi_schemas/](./serpapi_schemas/) — JSON schemas for [amenities](./serpapi_schemas/google-hotels-amenities.json) and [property types](./serpapi_schemas/google-hotels-property-types.json)
-- [prompts/](./prompts/) — Agent prompt definitions ([Booking](./prompts/booking_agent.md), [Research](./prompts/research_agent.md), [Supervisor](./prompts/supervisor.md))
+- **`backend/`** — All server-side logic
+  - `server.py` — Main FastAPI application serving `/api/chat` and static frontend files
+  - `agent.py` — LangGraph multi-agent workflow definition
+  - `state.py` — Graph state and schema definitions
+  - `tools.py` — SerpAPI & Google Maps tool integrations
+  - `routes/chat.py` — Chat endpoint handling HTTP streaming
+  - `core/graph.py` — Compiles the LangGraph state machine with the MemorySaver checkpointer
+  - `core/stream_formatter.py` — Translates LangGraph `astream` events into Vercel AI SDK SSE parts
+  - `models/schemas.py` — Pydantic request/response models
+  - `prompts/` — Markdown-based system prompts for each agent
+  - `serpapi_schemas/` — JSON schemas for SerpAPI hotel amenities and property types
+  - `utils/` — Shared backend utility functions
+- **`app.py`** — Legacy Streamlit frontend UI (V1)
+- **`main.py`** — Legacy CLI interface for testing
+- **`logger.py`** — Logging and observability system
+- **`serpapi_results/`** — Cached SerpAPI response samples for testing
+- **`pyproject.toml`** — Dependencies managed by `uv`
 
 ---
 
@@ -97,7 +106,7 @@ cd Travel-Planner
 uv sync
 ```
 
-> `uv` automatically manages the virtual environment, so you don’t need to create one manually.
+> `uv` automatically manages the virtual environment and resolves dependencies seamlessly.
 
 ### 3. Setup environment variables
 
@@ -106,22 +115,27 @@ Create a `.env` file in the root directory:
 ```env
 SERPAPI_KEY=your_serpapi_key
 GOOGLE_API_KEY=your_gemini_api_key
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 ---
 
 ## ▶️ Usage
 
-### Run Streamlit App
+### Run the FastAPI Backend
+
+Start the heavily optimized asynchronous backend which listens on port 8000:
+
+```bash
+uv run uvicorn backend.server:app --host 0.0.0.0 --port 8000
+```
+
+### Legacy Streamlit App
+
+If you want to run the original V1 prototype UI:
 
 ```bash
 uv run streamlit run app.py
-```
-
-### Run CLI Interface
-
-```bash
-uv run main.py
 ```
 
 ---
@@ -131,7 +145,6 @@ uv run main.py
 - "Plan a 5-day trip from Kolkata to Goa next month with a total budget under ₹25,000. Find the cheapest flights (layovers are fine) and suggest budget-friendly hotels near popular beaches. Also include a simple day-wise itinerary with must-visit spots."
 - "I’m visiting Jaipur for 3 days with my family and want premium accommodation. Find highly rated 5-star hotels and suggest nearby attractions, including forts, cultural spots, and good restaurants for authentic Rajasthani food."
 - "I’ll be in Bangalore for a weekend and want to explore the city. Suggest top-rated cafes, coworking-friendly spots, and popular tourist attractions, along with a rough plan to cover them efficiently."
-- "Plan a luxury weekend trip from Mumbai to Kochi for a couple. Find business class or premium flights, recommend top-tier resorts, and suggest romantic experiences like fine dining or backwater cruises with a detailed itinerary."
 
 ---
 
@@ -150,6 +163,7 @@ The system generates:
 ## 🔌 APIs Used
 
 - SerpAPI (Google Flights, Hotels, Local Search)
+- Google Maps Platform
 - Google Gemini (LLM reasoning and agent coordination)
 
 ---
@@ -171,14 +185,14 @@ Logs are stored per day and automatically cleaned up after 7 days.
 
 - Depends on external APIs (rate limits and latency)
 - Pricing data may not always be real-time accurate
-- Limited personalization without long-term memory
+- MemorySaver is ephemeral — conversations reset when the FastAPI server restarts
 
 ---
 
 ## 🔮 Future Improvements
 
-- Real-time booking integration
-- Persistent memory for personalized recommendations
+- React + Vite custom interactive frontend
+- Persistent memory for long-term personalized recommendations using a database checkpointer
 - Advanced itinerary optimization
 - Improved route visualization and map interactions
 
