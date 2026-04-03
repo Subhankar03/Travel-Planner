@@ -71,7 +71,7 @@ flowchart TD
 
 ## 📂 Project Structure
 
-- **`backend/`** — All server-side logic
+- `backend/` — All server-side logic
   - `server.py` — Main FastAPI application serving `/api/chat` and static frontend files
   - `agent.py` — LangGraph multi-agent workflow definition
   - `state.py` — Graph state and schema definitions
@@ -83,11 +83,11 @@ flowchart TD
   - `prompts/` — Markdown-based system prompts for each agent
   - `serpapi_schemas/` — JSON schemas for SerpAPI hotel amenities and property types
   - `utils/` — Shared backend utility functions
-- **`app.py`** — Legacy Streamlit frontend UI (V1)
-- **`main.py`** — Legacy CLI interface for testing
-- **`logger.py`** — Logging and observability system
-- **`serpapi_results/`** — Cached SerpAPI response samples for testing
-- **`pyproject.toml`** — Dependencies managed by `uv`
+- `app.py` — Legacy Streamlit frontend UI (V1)
+- `main.py` — Legacy CLI interface for testing
+- `logger.py` — Logging and observability system
+- `serpapi_results/` — Cached SerpAPI response samples for testing
+- `pyproject.toml` — Dependencies managed by `uv`
 
 ---
 

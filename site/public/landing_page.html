@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GlideTrip — One conversation. Complete travel plan.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error": "#b02500",
+              "surface-container-low": "#f3f0ed",
+              "on-tertiary": "#ceffd0",
+              "outline": "#787774",
+              "inverse-on-surface": "#9e9d9a",
+              "tertiary-container": "#6bff8f",
+              "on-background": "#2f2f2d",
+              "surface-dim": "#d6d4d0",
+              "on-primary-fixed-variant": "#4e1e00",
+              "primary": "#994100",
+              "surface-tint": "#994100",
+              "on-error": "#ffefec",
+              "on-tertiary-fixed-variant": "#006a2d",
+              "inverse-surface": "#0e0e0d",
+              "inverse-primary": "#f77113",
+              "on-tertiary-fixed": "#004a1d",
+              "on-primary-container": "#3f1700",
+              "secondary-fixed": "#bfd1ff",
+              "surface-container": "#eae8e4",
+              "on-primary": "#fff0e9",
+              "on-secondary-fixed": "#003271",
+              "surface-container-highest": "#dfdcd9",
+              "tertiary-fixed": "#6bff8f",
+              "primary-fixed-dim": "#f06c0b",
+              "on-secondary": "#f0f2ff",
+              "outline-variant": "#afadaa",
+              "on-secondary-container": "#004496",
+              "secondary-container": "#bfd1ff",
+              "on-primary-fixed": "#000000",
+              "secondary-fixed-dim": "#a9c4ff",
+              "primary-container": "#ff7a23",
+              "surface": "#f9f6f3",
+              "primary-dim": "#863800",
+              "tertiary-fixed-dim": "#5bf083",
+              "error-dim": "#b92902",
+              "error-container": "#f95630",
+              "surface-container-high": "#e4e2df",
+              "on-secondary-fixed-variant": "#004da8",
+              "surface-container-lowest": "#ffffff",
+              "on-surface": "#2f2f2d",
+              "primary-fixed": "#ff7a23",
+              "on-surface-variant": "#5c5b59",
+              "on-tertiary-container": "#005f28",
+              "tertiary": "#006a2d",
+              "secondary": "#0057bd",
+              "tertiary-dim": "#005d26",
+              "surface-bright": "#f9f6f3",
+              "background": "#f9f6f3"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f9f6f3; /* Warm Snow background */
+            font-family: 'Inter', sans-serif;
+            color: #2f2f2d; /* Charcoal/On-Surface */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .doodle-float {
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<nav class="docked full-width top-0 sticky z-50 bg-transparent backdrop-blur-xl transition-all duration-300">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-4 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-orange-600 text-2xl" data-icon="flight_takeoff">flight_takeoff</span>
+<span class="text-2xl font-bold tracking-tight text-neutral-900">GlideTrip</span>
+</div>
+<!-- Hidden links per layout request 1, but maintaining structure for logic -->
+<div class="hidden md:flex items-center space-gap-8">
+<!-- Links suppressed per user instruction: "No links yet" -->
+</div>
+<div class="flex items-center gap-4">
+<button class="px-5 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-100/50 rounded-lg transition-all active:scale-95">Sign In</button>
+</div>
+</div>
+</nav>
+<!-- Decorative Doodles Background Layer -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<!-- Top Left: Passport Stamp -->
+<div class="absolute top-20 left-10 opacity-20 doodle-float" style="transform: rotate(-15deg);">
+<span class="material-symbols-outlined text-7xl text-neutral-400" data-icon="verified">verified</span>
+</div>
+<!-- Top Right: Airplane with trail -->
+<div class="absolute top-32 right-12 opacity-25 doodle-float" style="transform: rotate(10deg);">
+<div class="flex flex-col items-end">
+<span class="material-symbols-outlined text-6xl text-orange-400" data-icon="airplanemode_active">airplanemode_active</span>
+<div class="h-1 w-32 border-t-2 border-dashed border-neutral-300 -mt-2 mr-6"></div>
+</div>
+</div>
+<!-- Left Margin: Suitcase -->
+<div class="absolute top-1/2 left-8 -translate-y-1/2 opacity-15 doodle-float" style="transform: rotate(5deg);">
+<span class="material-symbols-outlined text-8xl text-neutral-400" data-icon="work">work</span>
+</div>
+<!-- Right Margin: Globe -->
+<div class="absolute top-1/2 right-8 -translate-y-1/2 opacity-15 doodle-float" style="transform: rotate(-5deg);">
+<span class="material-symbols-outlined text-9xl text-neutral-400" data-icon="public">public</span>
+</div>
+<!-- Bottom Left: Compass -->
+<div class="absolute bottom-24 left-16 opacity-20 doodle-float" style="transform: rotate(20deg);">
+<span class="material-symbols-outlined text-7xl text-orange-500" data-icon="explore">explore</span>
+</div>
+<!-- Bottom Right: Camera -->
+<div class="absolute bottom-20 right-20 opacity-20 doodle-float" style="transform: rotate(-10deg);">
+<span class="material-symbols-outlined text-7xl text-neutral-400" data-icon="photo_camera">photo_camera</span>
+</div>
+</div>
+<!-- Main Content (Hero Section) -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 relative z-10" style="min-height: 60vh;">
+<div class="max-w-4xl w-full text-center space-y-10">
+<!-- Headline & Tagline -->
+<div class="space-y-4">
+<h1 class="text-6xl md:text-7xl font-extrabold tracking-tight text-neutral-900">
+                    GlideTrip
+                </h1>
+<p class="text-lg md:text-xl text-neutral-500 font-medium max-w-xl mx-auto leading-relaxed">
+                    One conversation. Complete travel plan.
+                </p>
+</div>
+<!-- Search Style Input -->
+<div class="relative max-w-2xl mx-auto w-full group">
+<div class="absolute inset-0 bg-primary/5 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+<div class="relative bg-white rounded-[14px] border border-neutral-200 flex items-center p-1.5 shadow-sm focus-within:shadow-md focus-within:border-orange-200 transition-all">
+<input class="w-full bg-transparent border-none focus:ring-0 px-5 py-3.5 text-neutral-700 placeholder:text-neutral-400 text-lg" placeholder="Where do you want to go?" type="text"/>
+<button class="bg-gradient-to-br from-primary to-primary-container w-11 h-11 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Example Prompt Chips -->
+<div class="flex flex-wrap justify-center gap-3">
+<button class="px-4 py-2 bg-orange-50 text-neutral-900 text-[13px] font-semibold rounded-full hover:bg-orange-100 transition-colors border border-orange-100/50">
+                    ✈️ Weekend getaway to Goa
+                </button>
+<button class="px-4 py-2 bg-orange-50 text-neutral-900 text-[13px] font-semibold rounded-full hover:bg-orange-100 transition-colors border border-orange-100/50">
+                    🏔️ Budget trip to Manali
+                </button>
+<button class="px-4 py-2 bg-orange-50 text-neutral-900 text-[13px] font-semibold rounded-full hover:bg-orange-100 transition-colors border border-orange-100/50">
+                    🌴 Luxury Kochi escape
+                </button>
+</div>
+<!-- Capability Badges -->
+<div class="flex items-center justify-center gap-4 pt-4">
+<div class="flex items-center gap-1.5 px-3 py-1 border border-neutral-200 rounded-full text-[12px] text-neutral-500 font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="flight">flight</span>
+<span>Flights</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 border border-neutral-200 rounded-full text-[12px] text-neutral-500 font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="hotel">hotel</span>
+<span>Hotels</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 border border-neutral-200 rounded-full text-[12px] text-neutral-500 font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span>Local Places</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Content Sections (Bento Grid Visualization of Capabilities) -->
+<section class="max-w-7xl mx-auto px-6 py-24 w-full space-y-12 relative z-10">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[240px]">
+<!-- Bento Item 1 -->
+<div class="md:col-span-8 bg-white rounded-2xl p-8 flex flex-col justify-between overflow-hidden relative group">
+<div class="relative z-10">
+<h3 class="text-2xl font-bold mb-2">Smart Itineraries</h3>
+<p class="text-neutral-500 max-w-sm">AI that understands your pace, interests, and budget perfectly.</p>
+</div>
+<div class="absolute top-0 right-0 w-1/2 h-full">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" data-alt="serene mountain lake reflecting a clear blue sky at dawn with a single wooden boat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3uxK20QA9i8ek2ppEARGWxtfAm26sfuDA2_jMp3IL--2A3zWo9W1nfTnhwe05nTUProZEAAxkRNwRDo9IQfL1piT6NhEYoMIaGjSU-vUcbcACZhY4UueFk-JscdnfwsZgbSbL62ywgkVuRLv3HUHsEF0yUn4acYeKsQmr1fFSolbL_Og99N629jrsOhF8nhgpUnq8FS7oVT_lXotOtFCK36icxHSVRSx-7SgJjiT9I7FBJ17q4O45JGCAsufb9zNpnh777KbXDRmS" style="mask-image: linear-gradient(to left, black 40%, transparent 100%);"/>
+</div>
+</div>
+<!-- Bento Item 2 -->
+<div class="md:col-span-4 bg-orange-600 text-white rounded-2xl p-8 flex flex-col justify-end relative overflow-hidden">
+<span class="material-symbols-outlined text-5xl mb-4" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="text-xl font-bold">Real-time Adjustments</h3>
+<p class="text-orange-100 text-sm mt-2">Flight delayed? We'll re-route your whole day instantly.</p>
+</div>
+<!-- Bento Item 3 -->
+<div class="md:col-span-4 bg-surface-container rounded-2xl p-8 flex flex-col justify-center items-center text-center">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<h3 class="text-lg font-bold">Price Prediction</h3>
+<p class="text-neutral-500 text-sm mt-2">Know the best time to book with Gemini insights.</p>
+</div>
+<!-- Bento Item 4 -->
+<div class="md:col-span-8 bg-white border border-neutral-100 rounded-2xl p-8 grid grid-cols-2 gap-8 items-center">
+<div class="space-y-4">
+<h3 class="text-2xl font-bold">Curated Gems</h3>
+<p class="text-neutral-500 text-sm">Beyond tourist traps. Discover local secrets curated by SerpAPI deep-search.</p>
+<button class="text-primary font-bold text-sm flex items-center gap-1 group">
+                        Explore Destinations 
+                        <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" data-icon="arrow_right_alt">arrow_right_alt</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-2 h-full">
+<div class="rounded-lg bg-neutral-100 h-24 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="vibrant street market in Jaipur with colorful textiles and aromatic spices" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvn4b6O6EyABCE3ybQtIJDu2FxdlbmX0pjQZ7tMmNvj7RPIxJulx7tbXSjDzHqIpAR1yTw4rQaS44wfGPS5jplBXn-57GUoas5LoyzYyoo-cTDGXBqguo-KediL5GIhCc81VgLg1HIjkRMPZg0ID_I8ZufxSwtUoDyCOGv45tsL_8qo8MwbQ6-WfZpk2w4qaz9Jxk38WztXCWOxvaGqSUOUGW4iDdnkKYv6dOqAWhnoIml_Ki4Q9pinif6OxhZLTnVfR2L4mPQz5Hc"/>
+</div>
+<div class="rounded-lg bg-neutral-100 h-24 overflow-hidden mt-4">
+<img class="w-full h-full object-cover" data-alt="panoramic coastal view of Goa with palm trees leaning over a sandy beach" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIIL4g9oblCZPRrX1XkzBR4EZKkOo3YFaid6qPVuw9pUHgfwuNp5Nj7kf87JiilLqBjmJYdBX5KpL6STITBZxwxDfb9d_gmAjvyYoXMa4_ZefCfBPVRWSheRKadTqOhvhL8Rd118gG6ObAQ8i4mV3bI-lLIpwiaZ9qa5Rim12Zdw_rFezLT93ZkrNtfIDlKoabpRM8CpjJDiYv7hmVTN9ZNfuQd81GnPnqK4fPfD1oANp29ymhT9uCmkjksCuoamE69LptZN280K13"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Section -->
+<footer class="bg-neutral-100 dark:bg-neutral-900 full-width py-12 px-6 mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto w-full gap-8">
+<div class="flex flex-col items-center md:items-start gap-2">
+<div class="text-lg font-bold text-neutral-900 dark:text-neutral-50">GlideTrip</div>
+<div class="text-[10px] tracking-widest text-neutral-400 uppercase font-bold">
+                    © 2024 GlideTrip · Powered by Gemini · LangGraph · SerpAPI
+                </div>
+</div>
+<div class="flex items-center gap-8">
+<a class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 hover:text-orange-500 underline decoration-2 underline-offset-4 transition-colors" href="#">Privacy Policy</a>
+<a class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 hover:text-orange-500 underline decoration-2 underline-offset-4 transition-colors" href="#">Terms of Service</a>
+<a class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 hover:text-orange-500 underline decoration-2 underline-offset-4 transition-colors" href="#">Cookie Policy</a>
+</div>
+</div>
+</footer>
+</body></html>

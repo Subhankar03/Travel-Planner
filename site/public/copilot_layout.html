@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GlideTrip Copilot | Your AI Travel Assistant</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface": "#1b1c1a",
+                        "surface": "#fcf9f6",
+                        "tertiary-fixed": "#d8e2ff",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#ffdbca",
+                        "on-tertiary-container": "#00306e",
+                        "surface-dim": "#dcdad7",
+                        "surface-tint": "#9d4300",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f6f3f0",
+                        "on-primary-fixed-variant": "#783200",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#582200",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-secondary-container": "#006f64",
+                        "outline": "#8c7164",
+                        "on-secondary-fixed": "#00201c",
+                        "on-secondary-fixed-variant": "#005048",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e5e2df",
+                        "inverse-surface": "#30302f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f3f0ed",
+                        "secondary": "#22c55e", // Using the Green from system for prices
+                        "on-surface-variant": "#584237",
+                        "background": "#fcf9f6",
+                        "surface-container": "#f0edea",
+                        "primary-fixed-dim": "#ffb690",
+                        "tertiary": "#005ac2",
+                        "secondary-container": "#6df5e1",
+                        "secondary-fixed-dim": "#4fdbc8",
+                        "surface-container-highest": "#e5e2df",
+                        "on-background": "#1b1c1a",
+                        "surface-container-high": "#eae8e5",
+                        "primary-container": "#f97316",
+                        "inverse-primary": "#ffb690",
+                        "tertiary-container": "#6399ff",
+                        "on-tertiary-fixed": "#001a42",
+                        "secondary-fixed": "#71f8e4",
+                        "primary": "#9d4300",
+                        "surface-bright": "#fcf9f6",
+                        "on-primary-fixed": "#341100",
+                        "outline-variant": "#e0c0b1"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "10px", "lg": "14px", "xl": "18px", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- Left Panel: Linear Chat (45%) -->
+<aside class="w-[45%] flex flex-col h-full relative bg-surface border-r border-outline-variant/20">
+<!-- Header -->
+<header class="h-16 px-8 flex items-center shrink-0">
+<span class="text-[20px] font-bold text-primary-container tracking-tight">GlideTrip</span>
+</header>
+<!-- Chat Feed -->
+<main class="flex-1 overflow-y-auto px-8 py-4 hide-scrollbar space-y-8 pb-32">
+<!-- User Message -->
+<div class="flex flex-col items-end">
+<div class="bg-primary-container text-white px-6 py-3 rounded-full max-w-[85%] text-[16px] shadow-sm">
+                        Planning 3 days in Goa with a budget of ₹30,000
+                    </div>
+</div>
+<!-- AI Process Expander -->
+<div class="flex flex-col items-start">
+<button class="flex items-center gap-2 bg-[#FFF7ED] hover:bg-[#FFEDD5] text-on-surface-variant px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-outline-variant/10">
+<span class="material-symbols-outlined text-[18px]">travel_explore</span>
+<span>Planning 3 days in Goa...</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+<!-- AI Editorial Message -->
+<article class="flex flex-col items-start max-w-[90%]">
+<div class="text-[16px] leading-[1.6] text-[#1C1917] font-normal">
+                        Based on your prompt, I've curated a few options for flights, hotels, and local experiences. Here's what I recommend for your 3-day trip to Goa:
+                    </div>
+</article>
+<!-- Floating Suggestion Cards (Editorial Style) -->
+<div class="grid grid-cols-1 gap-4 mt-4">
+<div class="p-6 bg-surface-container-lowest rounded-lg border border-outline-variant/10">
+<h3 class="text-primary-container font-semibold mb-2">Budget Allocation</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                            With ₹30,000, we can comfortably secure round-trip flights (approx ₹11k), a luxury stay for 2 nights (approx ₹15k), leaving ₹4k for scooters and beach shacks.
+                        </p>
+</div>
+</div>
+</main>
+<!-- Input Bar -->
+<footer class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-surface via-surface to-transparent">
+<div class="relative flex items-center bg-surface-container-lowest rounded-xl shadow-[0px_24px_48px_rgba(88,66,55,0.06)] border border-outline-variant/20 p-2">
+<textarea class="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-on-surface placeholder-on-surface-variant/50 resize-none" placeholder="Ask about your trip..." rows="1"></textarea>
+<button class="flex items-center justify-center bg-primary-container text-white w-10 h-10 rounded-full hover:scale-95 transition-transform shrink-0 shadow-lg">
+<span class="material-symbols-outlined">arrow_upward</span>
+</button>
+</div>
+</footer>
+</aside>
+<!-- Right Panel: Results & Map (55%) -->
+<main class="w-[55%] flex flex-col h-full bg-surface-container-lowest">
+<!-- Sticky Navigation Tabs -->
+<nav class="sticky top-0 z-10 bg-surface-container-lowest px-8 pt-6 border-b border-outline-variant/10">
+<div class="flex gap-8">
+<button class="pb-4 text-primary-container border-b-2 border-primary-container font-semibold flex items-center gap-2">
+<span>✈️</span> Flights
+                    </button>
+<button class="pb-4 text-on-surface-variant font-medium flex items-center gap-2 hover:text-primary-container transition-colors">
+<span>🏨</span> Hotels
+                    </button>
+<button class="pb-4 text-on-surface-variant font-medium flex items-center gap-2 hover:text-primary-container transition-colors">
+<span>📍</span> Places
+                    </button>
+</div>
+</nav>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto hide-scrollbar">
+<!-- Flights Section -->
+<section class="p-8 space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold tracking-tight text-on-surface">Top Flight Recommendation</h2>
+<span class="text-xs font-semibold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded">FASTEST</span>
+</div>
+<div class="group bg-surface-container-lowest rounded-lg border border-outline-variant/10 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center">
+<img alt="Indigo Logo" class="w-8 h-8 object-contain" data-alt="stylized vector logo of an airplane in blue and white representing an airline brand" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlUODHkJv9-uQE_S0ObH2BNqvuSzx9Yxy4yUng8TKQ1rXRjPQDS79y7WsKhKTW_6NZD161zz6bA0enR_bTL7sTowY8pz1UZHtiy4f9fJVSv6S8g_JrUCdEcmDjL8OHfvli73lqlY3apeWDtCkVwMZzUQkdJskM2xHaYj00EMQgrIrpTN_5bB_3nuMmXqUeM7ebB1W9dGYBe_LQuXG8u6chH4LNaxXHSWYupDWXV5Tgb4h1EuL6B4Vro9VyRl6q5xg9ZGUk8KXqgF3z"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-3">
+<span class="text-lg font-bold">09:00</span>
+<span class="material-symbols-outlined text-outline-variant text-[16px]">trending_flat</span>
+<span class="text-lg font-bold">11:30</span>
+</div>
+<span class="text-sm text-on-surface-variant">DEL → GOI (IndiGo)</span>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<div class="text-right">
+<div class="text-secondary text-xl font-bold">₹5,400</div>
+<div class="text-xs text-on-surface-variant">Non-stop · 2h 30m</div>
+</div>
+<button class="bg-primary-container text-on-primary px-6 py-2.5 rounded font-semibold text-sm hover:opacity-90 transition-opacity">
+                                Book
+                            </button>
+</div>
+</div>
+</section>
+<!-- Hotels Section -->
+<section class="px-8 pb-8 space-y-6">
+<h2 class="text-xl font-bold tracking-tight text-on-surface">Stay Options</h2>
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant/10 overflow-hidden flex hover:shadow-md transition-shadow">
+<div class="w-1/3">
+<img alt="Taj Exotica Resort" class="w-full h-full object-cover" data-alt="luxury tropical resort with turquoise infinity pool overlooking the ocean at sunset with palm trees" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDicPqDvIdY6yz74OdwAq2NMNU6cQpmCK3t8UYJMbZb3JrhtNK8G5xvlhXv_P95yC-86gqGnRio7GiOnxjt96Bp_yqWjkKrNG1A8qihK29ge0OlSgMwNP2wMXMmsXcTwBGx46YT3JzeiDdOg1s_srlDwgAkhxYLs1ascgFfZJlGcq7pY5IosXmMD6H1DSnXw7L11kHqgVNxhNQzv1yA_JJFYCEB62MGUD9KVUNsZ-378ddYLc3W80pt0qhCMcOWMdXFNlcmNSHtoPRe"/>
+</div>
+<div class="w-2/3 p-6 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-lg font-bold">Taj Exotica Resort &amp; Spa</h3>
+<div class="flex items-center gap-1 text-[#F59E0B]">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-sm font-bold">5.0</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant mt-2">Benaulim, South Goa. Luxury stay with private beach access and lush gardens.</p>
+</div>
+<div class="flex items-end justify-between mt-6">
+<div>
+<span class="text-2xl font-bold text-secondary">₹18,000</span>
+<span class="text-sm text-on-surface-variant"> / night</span>
+</div>
+<button class="bg-surface-container-high text-on-surface px-6 py-2.5 rounded font-semibold text-sm hover:bg-surface-variant transition-colors">
+                                    View
+                                </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Map Area -->
+<section class="h-[400px] relative mt-4">
+<div class="absolute inset-0 bg-[#E5E7EB] overflow-hidden">
+<!-- Mock Map Background -->
+<img alt="Map of Goa" class="w-full h-full object-cover opacity-60" data-alt="minimalist clean map aesthetic of a coastal region with soft blue ocean and warm sand tones" data-location="Goa, India" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ-eykmAhMYYMNu3w8upP0ONj026Idou06rc9RZW-2KPxkKrEo2qnOdnhkMUUkNApn8i4xNYtLPgPG9GXJLo31ANT6E92nzESrtL550-HvhzdLKMZBSj4kOnY5btZ_pyzhzYKYjh3qHpK400r8RHPfSGCQLi0yqTldnYd5deCYa4XFykh5B1zHE9elesd-ovCDvvpmTMHZIhATmgMLOMQd28oMDiyJ7UjY1GJUbmvkiWQMlpjiMogVx81rQFSbhFDiDzTP0oeWoTrD"/>
+<!-- Map Marker: Hotel -->
+<div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="relative">
+<div class="w-10 h-10 bg-[#F43F5E] rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+<span class="material-symbols-outlined text-white text-[20px]" style="font-variation-settings: 'FILL' 1;">hotel</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white px-3 py-1.5 rounded-lg shadow-lg text-[12px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Taj Exotica
+                                </div>
+</div>
+</div>
+<!-- Map Marker: Place 1 -->
+<div class="absolute top-[60%] left-[45%] group cursor-pointer">
+<div class="relative">
+<div class="w-8 h-8 bg-[#14B8A6] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+<span class="material-symbols-outlined text-white text-[16px]">star</span>
+</div>
+</div>
+</div>
+<!-- Map Marker: Place 2 -->
+<div class="absolute top-[45%] left-[55%] group cursor-pointer">
+<div class="relative">
+<div class="w-8 h-8 bg-[#14B8A6] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+<span class="material-symbols-outlined text-white text-[16px]">restaurant</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Controls Overlay -->
+<div class="absolute bottom-6 right-6 flex flex-col gap-2">
+<button class="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-neutral-50">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center hover:bg-neutral-50">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

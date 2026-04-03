@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: #FFFCF9;
+  --color-surface: #FFFFFF;
+  --color-surfaceAlt: #FFF7ED;
+  --color-divider: #E7E5E4;
+  --color-primary: #F97316;
+  --color-primary-hover: #EA580C;
+  --color-primary-light: #FFEDD5;
+  --color-primary-subtle: #FFF7ED;
+  --color-text-primary: #1C1917;
+  --color-text-body: #44403C;
+  --color-text-secondary: #78716C;
+  --color-text-muted: #A8A29E;
+  --color-semantic-price: #22C55E;
+  --color-semantic-star: #F59E0B;
+  --color-semantic-flight: #3B82F6;
+  --color-semantic-hotel: #F43F5E;
+  --color-semantic-places: #14B8A6;
+  --font-sans: 'Inter', sans-serif;
+  --shadow-warm: 0 4px 14px 0 rgba(249, 115, 22, 0.05);
+  --shadow-glow: 0 0 16px rgba(249, 115, 22, 0.15);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-body);
+  font-family: var(--font-sans);
+}
+
+@layer utilities {
+  .clip-circle {
+    clip-path: circle(50% at 50% 50%);
+  }
+}
