@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from backend.core.graph import get_graph
+from backend.agent import get_graph
 from backend.core.stream_formatter import stream_langgraph_as_vercel_sse
 from backend.models.schemas import ChatRequest
 

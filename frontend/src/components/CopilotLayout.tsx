@@ -22,7 +22,7 @@ export default function CopilotLayout({ initialQuery }: CopilotLayoutProps) {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden relative">
       {/* Divider Line in the middle */}
-      <div className="absolute left-[45%] top-0 bottom-0 w-[1px] bg-divider z-10 hidden md:block" />
+      <div className="absolute left-[45%] top-0 bottom-0 w-px bg-divider z-10 hidden md:block" />
 
       {/* Left Panel: Chat */}
       <div className="w-full md:w-[45%] h-full flex flex-col relative z-20 bg-background">

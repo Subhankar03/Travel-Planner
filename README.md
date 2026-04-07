@@ -14,13 +14,14 @@ It is a multi-agent travel planner that enables users to plan trips using natura
 
 ## ✨ Key Features
 
-- **Natural language trip planning**
-- **Multi-agent architecture** with task specialization
-- **Flight and hotel search** using real-time data
-- **Local attractions and restaurant discovery**
-- **Route planning** between locations (maps integration)
+- **Natural language trip planning** via a sleek React Copilot interface
+- **Multi-agent architecture** with task specialization via LangGraph
+- **Flight and hotel search** using real-time data seamlessly pushed to the UI
+- **Local attractions and restaurant discovery** natively linked to geolocation
 - **FastAPI Backend** exposing a responsive, asynchronous API
 - **Real-time Streaming** via the Vercel AI SDK (`x-vercel-ai-ui-message-stream: v1`) protocol over SSE
+- **Dynamic Results Panel** visualizing flights, hotels, and places as interactive cards
+- **Smart Formatting** rendering AI markdown natively, mapping tool call status dynamically
 - **Observability** with detailed execution logs
 
 ---
@@ -59,35 +60,39 @@ flowchart TD
 
 ## 🛠️ Tech Stack
 
-- **Backend core**: Python, LangGraph, standard `MemorySaver` checkpointer
+### Frontend
+- **Framework**: React 19, Vite
+- **Styling**: Tailwind CSS v4, Lucide React (Icons)
+- **Streaming Logic**: `@microsoft/fetch-event-source`
+- **Markdown Handling**: `react-markdown`, `remark-gfm`, `@tailwindcss/typography`
+
+### Backend
+- **Core logic**: Python, LangGraph, `MemorySaver` checkpointer
 - **LLM**: Google Gemini
 - **Tools**: SerpAPI (Flights, Hotels, Local search), Google Maps
-- **API Server**: FastAPI, Uvicorn
-- **Streaming**: Vercel AI SDK DataStream Protocol
-- **Legacy UI**: Streamlit
-- **Upcoming UI**: React, Vite, TailwindCSS
+- **Server**: FastAPI, Uvicorn
 
 ---
 
 ## 📂 Project Structure
 
-- `backend/` — All server-side logic
-  - `server.py` — Main FastAPI application serving `/api/chat` and static frontend files
+- `backend/` — All server-side API logic
+  - `server.py` — Main FastAPI application serving `/api/chat`
   - `agent.py` — LangGraph multi-agent workflow definition
   - `state.py` — Graph state and schema definitions
   - `tools.py` — SerpAPI & Google Maps tool integrations
   - `routes/chat.py` — Chat endpoint handling HTTP streaming
-  - `core/graph.py` — Compiles the LangGraph state machine with the MemorySaver checkpointer
+  - `core/graph.py` — Compiles the LangGraph state machine lazily
   - `core/stream_formatter.py` — Translates LangGraph `astream` events into Vercel AI SDK SSE parts
-  - `models/schemas.py` — Pydantic request/response models
   - `prompts/` — Markdown-based system prompts for each agent
-  - `serpapi_schemas/` — JSON schemas for SerpAPI hotel amenities and property types
-  - `utils/` — Shared backend utility functions
-- `app.py` — Legacy Streamlit frontend UI (V1)
-- `main.py` — Legacy CLI interface for testing
+- `frontend/` — The React UI
+  - `src/components/` — React UI components (ChatPanel, ResultsPanel, LandingHero, CopilotLayout)
+  - `src/hooks/useGlideTripChat.ts` — Core SSE parsing and state orchestration hook
+  - `src/index.css` — Tailwind v4 configuration and design token themes
+  - `vite.config.ts` — Vite bundler configuration
+- `app.py` — Legacy Streamlit frontend UI (V1 prototype)
 - `logger.py` — Logging and observability system
-- `serpapi_results/` — Cached SerpAPI response samples for testing
-- `pyproject.toml` — Dependencies managed by `uv`
+- `pyproject.toml` — Python backend dependencies managed by `uv`
 
 ---
 
@@ -100,15 +105,21 @@ git clone https://github.com/Subhankar03/Travel-Planner.git
 cd Travel-Planner
 ```
 
-### 2. Install dependencies (using uv)
+### 2. Set up Backend (using uv)
 
 ```bash
 uv sync
 ```
+*Note: `uv` automatically manages the virtual environment and resolves dependencies seamlessly.*
 
-> `uv` automatically manages the virtual environment and resolves dependencies seamlessly.
+### 3. Set up Frontend (using npm)
 
-### 3. Setup environment variables
+```bash
+cd frontend
+npm install
+```
+
+### 4. Setup environment variables
 
 Create a `.env` file in the root directory:
 
@@ -116,27 +127,32 @@ Create a `.env` file in the root directory:
 SERPAPI_KEY=your_serpapi_key
 GOOGLE_API_KEY=your_gemini_api_key
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+# OPTIONAL: Use Vertex AI Instead
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_CLOUD_PROJECT=your_project
+GOOGLE_CLOUD_LOCATION=global
 ```
 
 ---
 
 ## ▶️ Usage
 
-### Run the FastAPI Backend
+To run the application end-to-end, you need to start both the Python backend and the React frontend.
 
-Start the heavily optimized asynchronous backend which listens on port 8000:
-
+### 1. Run the FastAPI Backend
+Start the high-performance async API server:
 ```bash
-uv run uvicorn backend.server:app --host 0.0.0.0 --port 8000
+uv run uvicorn backend.server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Legacy Streamlit App
-
-If you want to run the original V1 prototype UI:
-
+### 2. Run the React Frontend
+In a new terminal window, start the Vite development server:
 ```bash
-uv run streamlit run app.py
+cd frontend
+npm run dev
 ```
+
+Visit `http://localhost:5173` in your browser. The app will ask for location permissions to intelligently tailor the trip origin!
 
 ---
 
@@ -152,32 +168,11 @@ uv run streamlit run app.py
 
 The system generates:
 
-- Flight options with pricing and booking links
-- Hotel recommendations with amenities and images
-- Local attractions, restaurants, and reviews
-- Structured itinerary suggestions
+- Flight options with pricing and booking links gracefully appearing in the UI
+- Hotel recommendations with amenities and visual cards
+- Local attractions, restaurants, and reviews parsed dynamically
+- Structured itinerary suggestions utilizing markdown formatting
 - Route guidance between locations (maps integration)
-
----
-
-## 🔌 APIs Used
-
-- SerpAPI (Google Flights, Hotels, Local Search)
-- Google Maps Platform
-- Google Gemini (LLM reasoning and agent coordination)
-
----
-
-## 📈 Observability
-
-The system includes a logging module that tracks:
-
-- User queries
-- Agent decisions
-- Tool calls and outputs
-- Final AI responses
-
-Logs are stored per day and automatically cleaned up after 7 days.
 
 ---
 
@@ -191,10 +186,9 @@ Logs are stored per day and automatically cleaned up after 7 days.
 
 ## 🔮 Future Improvements
 
-- React + Vite custom interactive frontend
 - Persistent memory for long-term personalized recommendations using a database checkpointer
 - Advanced itinerary optimization
-- Improved route visualization and map interactions
+- Interactive Map Component rendering Place coordinates dynamically within the Results Panel
 
 ---
 

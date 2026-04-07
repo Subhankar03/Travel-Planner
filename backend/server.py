@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.core.graph import init_graph, shutdown_graph
+from backend.agent import init_graph, shutdown_graph
 from backend.routes.chat import router as chat_router
 
 
@@ -26,7 +26,7 @@ async def lifespan(_app: FastAPI):
 
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title='AI Travel Planner API',
+    title='AI Travel Planner Backend',
     version='0.2.0',
     lifespan=lifespan,
 )

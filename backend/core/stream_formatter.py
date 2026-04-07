@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, cast
 
+from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMessage
+from langgraph.graph.state import CompiledStateGraph
 
 
 # ── Nodes whose LLM token deltas should NOT be streamed to the client ──────────
@@ -55,7 +57,7 @@ def _extract_text(content: Any) -> str:
 
 # ── Main stream generator ─────────────────────────────────────────────────────
 async def stream_langgraph_as_vercel_sse(
-    graph,
+    graph: CompiledStateGraph,
     messages: list[dict],
     thread_id: str,
     user_location: str | None = None,
@@ -67,14 +69,19 @@ async def stream_langgraph_as_vercel_sse(
     call / tool result detection).
     """
     # ── Convert frontend messages to LangChain message objects ─────────────
+    # Since LangGraph MemorySaver retains history per thread_id, we only need
+    # to pass the LATEST message from the frontend to avoid duplicating history
+    # and sending empty AIMessages (from frontend tool states) to Gemini.
     lc_messages: list[HumanMessage | AIMessage] = []
-    for msg in messages:
-        if msg['role'] == 'user':
-            lc_messages.append(HumanMessage(content=msg['content']))
-        elif msg['role'] == 'assistant':
-            lc_messages.append(AIMessage(content=msg['content']))
+    if messages:
+        last_msg = messages[-1]
+        content = last_msg['content'] if last_msg['content'] else ' '
+        if last_msg['role'] == 'user':
+            lc_messages.append(HumanMessage(content=content))
+        elif last_msg['role'] == 'assistant':
+            lc_messages.append(AIMessage(content=content))
 
-    config = {'configurable': {'thread_id': thread_id}}
+    config: RunnableConfig = {'configurable': {'thread_id': thread_id}}
     graph_input: dict[str, Any] = {
         'messages': lc_messages,
         'user_location': user_location,
@@ -107,7 +114,8 @@ async def stream_langgraph_as_vercel_sse(
 
                 if isinstance(msg_chunk, AIMessageChunk):
                     # Skip tokens from muted nodes (e.g. supervisor routing)
-                    langgraph_node = metadata.get('langgraph_node', '')
+                    metadata_dict = cast(dict[str, Any], metadata)
+                    langgraph_node = metadata_dict.get('langgraph_node', '')
                     if langgraph_node in _MUTED_NODES:
                         continue
 
@@ -130,9 +138,10 @@ async def stream_langgraph_as_vercel_sse(
                             'delta': delta,
                         })
 
-            # ── Node-level updates (tool calls / results) ──────────────────
             elif chunk_type == 'updates':
-                for _node_name, node_output in chunk['data'].items():
+                # cast node_data to dict for pyright because multiple modes are mixed
+                node_data = cast(dict[str, Any], chunk['data'])
+                for _node_name, node_output in node_data.items():
                     if not isinstance(node_output, dict):
                         continue
 
