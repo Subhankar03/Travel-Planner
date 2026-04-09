@@ -61,7 +61,7 @@ def _session_banner(label: str) -> str:
     """Build a compact session-boundary banner line.
 
     Example output:
-        ────── Session Started @ 2026-03-19 22:50:10 ──────
+        ────── Session Started ──────
     """
     text = f' {label} '
     dash_count = max(0, (54 - len(text)) // 2)
@@ -127,13 +127,16 @@ class TravelPlannerLogger:
         logger.close()
     """
 
-    def __init__(self, auto_purge: bool = True) -> None:
+    def __init__(self, auto_purge: bool = True, hide_tool_outputs: bool = True) -> None:
         """Initialise a new logger session.
 
         Args:
             auto_purge: If ``True`` (default), logs older than
                 ``_LOG_RETENTION_DAYS`` are deleted on startup.
+            hide_tool_outputs: If ``True`` (default), actual tool results are
+                replaced with a placeholder to save context window space.
         """
+        self._hide_tool_outputs = hide_tool_outputs
         _LOG_DIR.mkdir(parents=True, exist_ok=True)
 
         # Purge stale logs before opening today's file
@@ -175,9 +178,24 @@ class TravelPlannerLogger:
         """Log a message sent by the user."""
         self._entry('USER', content)
 
-    def log_ai(self, content: str) -> None:
-        """Log a final AI response (collapsed to a single line)."""
-        single_line = ' '.join(content.split())
+    def log_ai(self, content: Any) -> None:
+        """Log a final AI response, extracting text from blocks if necessary."""
+        text = ""
+        if isinstance(content, str):
+            text = content
+        elif isinstance(content, list):
+            # Handle LangChain list of content blocks
+            parts = []
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    parts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    parts.append(block)
+            text = "\n".join(parts)
+        else:
+            text = str(content)
+
+        single_line = ' '.join(text.split())
         self._entry('AI', single_line)
 
     def log_tool_call(self, tool_name: str, args: dict[str, Any] | None = None) -> None:
@@ -187,7 +205,10 @@ class TravelPlannerLogger:
 
     def log_tool_output(self, tool_name: str, output: Any) -> None:
         """Log the raw output returned by a tool."""
-        output_str = _serialize(output)
+        if self._hide_tool_outputs:
+            output_str = '{<tool results here>}'
+        else:
+            output_str = _serialize(output)
         self._entry('TOOL OUTPUT', f'{tool_name} → {output_str}')
 
     def log_node(self, node_name: str) -> None:

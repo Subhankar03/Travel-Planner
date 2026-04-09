@@ -6,14 +6,14 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
-# import os
+import os
 import warnings
 
 import requests
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
-# from langchain_nvidia import ChatNVIDIA
+from langchain_nvidia import ChatNVIDIA
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -41,6 +41,7 @@ _checkpointer: MemorySaver | None = None
 supervisor_template = (_PROMPT_DIR / "supervisor.md").read_text(encoding="utf-8")
 booking_template = (_PROMPT_DIR / "booking_agent.md").read_text(encoding="utf-8")
 research_template = (_PROMPT_DIR / "research_agent.md").read_text(encoding="utf-8")
+supported_locations = (_PROMPT_DIR.parent / "serpapi_schemas" / "locations.csv").read_text(encoding="utf-8")
 
 # supervisor_model = ChatNVIDIA(
 #     model='nvidia/nemotron-3-nano-30b-a3b',
@@ -49,12 +50,19 @@ research_template = (_PROMPT_DIR / "research_agent.md").read_text(encoding="utf-
 # )
 supervisor_model = ChatGoogleGenerativeAI(
     model='gemini-3.1-flash-lite-preview',
-    thinking_level='minimal'
+    include_thoughts=True
 )
+# specialist_model = ChatNVIDIA(
+#     model='nvidia/nemotron-3-super-120b-a12b',
+#     api_key=os.getenv('NVIDIA_API_KEY'),
+#     chat_template_kwargs={'enable_thinking': True, 'low_effort': False}
+# )
 specialist_model = ChatGoogleGenerativeAI(
     model='gemini-3-flash-preview',
-    thinking_level='minimal'
+    include_thoughts=True,
+    thinking_level='low'
 )
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
@@ -69,29 +77,42 @@ def get_current_location() -> str:
         city = data.get("city", "Unknown City")
         region = data.get("region", "Unknown Region")
         return f"{city}, {region}"
-    except requests.RequestException, ValueError:
-        return "Unknown Location"
+    except (requests.RequestException, ValueError):
+        return 'Unknown Location'
+
+
+def _prefix_response(response: AIMessage, agent_name: str) -> None:
+    """Prepend an agent-name prefix to the response content in-place."""
+    prefix = f'**{agent_name}:**\n'
+
+    if not response.content:
+        return
+
+    if isinstance(response.content, str):
+        response.content = f'{prefix}{response.content}'
+        return
+
+    if not isinstance(response.content, list) or not response.content:
+        return
+
+    first = response.content[0]
+    if isinstance(first, dict) and first.get('type') == 'text':
+        first['text'] = f'{prefix}{first["text"]}'
 
 
 class SupervisorDecision(BaseModel):
     """The structured decision output for the supervisor."""
-    route: Literal["booking_agent", "research_agent", "DIRECT_RESPONSE", "FINISH"] = Field(
+    route: Literal["booking_agent", "research_agent", "DIRECT_RESPONSE"] = Field(
         description="The next step in the workflow."
     )
     response: str | None = Field(
         default=None,
-        description="If route is DIRECT_RESPONSE, provide a helpful, friendly reply in markdown here."
+        description="If you choose 'DIRECT_RESPONSE', write your response here."
     )
 
 
 def supervisor_node(state: TravelState) -> dict:
     """Supervisor decides which specialist agent should handle the request."""
-
-    routing_instructions = (
-        "Given the conversation above, decide what should happen next. "
-        "If it's a general or meta question, choose DIRECT_RESPONSE and provide your reply in the 'response' field. "
-        "Otherwise, choose the appropriate agent."
-    )
 
     # Identify user location (from state or IP fallback)
     location = state.get("user_location") or get_current_location()
@@ -99,8 +120,10 @@ def supervisor_node(state: TravelState) -> dict:
     routing_prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(supervisor_template),
-            MessagesPlaceholder(variable_name="messages"),
-            HumanMessage(content=routing_instructions),
+            MessagesPlaceholder("messages"),
+            HumanMessage(name='system', content='''**system:**
+Review the conversation and route to the correct agent.
+If all needs are addressed, choose "DIRECT_RESPONSE" and consolidate the information in a user-friendly format.''')
         ]
     )
 
@@ -119,7 +142,7 @@ def supervisor_node(state: TravelState) -> dict:
     if route == "DIRECT_RESPONSE":
         return {
             "next": "DIRECT_RESPONSE",
-            "messages": [AIMessage(getattr(decision, 'response'))],
+            "messages": [AIMessage(name='supervisor', content=getattr(decision, 'response', ''))],
         }
     return {"next": route}
 
@@ -131,8 +154,10 @@ def booking_agent_node(state: TravelState) -> dict:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(booking_template),
-            MessagesPlaceholder(variable_name="messages"),
-            HumanMessage(content="Please continue with the next appropriate action."),
+            MessagesPlaceholder("messages"),
+            HumanMessage(name='system', content='''**system:**
+Search for the flights and/or hotels requested. 
+Once you have results, respond directly with a structured summary and recommendation.''')
         ]
     )
 
@@ -149,7 +174,10 @@ def booking_agent_node(state: TravelState) -> dict:
         )
     )
 
-    return {"messages": [response]}
+    _prefix_response(response, 'booking_agent')
+    response.name = 'booking_agent'
+
+    return {'messages': [response]}
 
 
 def research_agent_node(state: TravelState) -> dict:
@@ -159,8 +187,10 @@ def research_agent_node(state: TravelState) -> dict:
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(research_template),
-            MessagesPlaceholder(variable_name="messages"),
-            HumanMessage(content="Please continue with the next appropriate action."),
+            MessagesPlaceholder("messages"),
+            HumanMessage(name='system', content='''**system:**
+Search for the restaurants, attractions, or directions requested. 
+Once you have results, respond directly with a structured summary and recommendation.''')
         ]
     )
     # Identify user location (from state or IP fallback)
@@ -171,19 +201,23 @@ def research_agent_node(state: TravelState) -> dict:
             {
                 "today": datetime.now().strftime("%A, %Y-%m-%d"),
                 "location": location,
+                "supported_locations": supported_locations,
                 "messages": state["messages"],
             }
         )
     )
 
-    return {"messages": [response]}
+    _prefix_response(response, 'research_agent')
+    response.name = 'research_agent'
+
+    return {'messages': [response]}
 
 
 # ── Routing Logic ──────────────────────────────────────────────────────────────
 def route_supervisor(state: TravelState) -> str:
     """Route based on the supervisor's decision stored in state."""
-    next_agent = state.get("next", "FINISH")
-    if next_agent in ("FINISH", "DIRECT_RESPONSE"):
+    next_agent = state.get("next", "DIRECT_RESPONSE")
+    if next_agent == "DIRECT_RESPONSE":
         return END
     return next_agent
 
@@ -228,7 +262,7 @@ def build_graph(checkpointer: MemorySaver | None = None) -> CompiledStateGraph:
         {
             "booking_agent": "booking_agent",
             "research_agent": "research_agent",
-            END: END,  # covers both FINISH and DIRECT_RESPONSE
+            END: END,  # covers DIRECT_RESPONSE
         },
     )
 

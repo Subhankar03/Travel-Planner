@@ -19,7 +19,16 @@ from backend.utils import TravelPlannerLogger, render_map_in_streamlit
 # NOTE: This caching system is strictly for testing purposes to avoid hitting
 # the LLM and SerpAPI repeatedly. It saves the user prompt, tool output, and
 # AI response in a local JSON file. It will be removed in the future.
-TESTING_CACHE_FILE = Path("logs/testing_cache.json")
+TESTING_CACHE_FILE = Path('logs/testing_cache.json')
+PROMPTS_FILE = Path('backend/prompts/prompt_examples.txt')
+
+
+def load_example_prompts():
+    """Load example prompts from the text file."""
+    if PROMPTS_FILE.exists():
+        with open(PROMPTS_FILE, 'r', encoding='utf-8') as f:
+            return [line.strip() for line in f if line.strip()]
+    return []
 
 
 def load_testing_cache():
@@ -70,14 +79,7 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### 💡 Example Prompts")
-    examples = [
-        "Hey there! I'm planning a chill trip from Delhi to Goa with my partner for next week, leaving on Wednesday and coming back on Sunday. Could you find us some direct flights? We also need a nice 4-star or 5-star hotel near the beach. Once you have that, can you suggest some cool beach shacks or highly-rated seafood joints near the hotel, along with a couple of fun water sports places?",
-        "I'm organising a family get-together in Ooty for the first weekend of next month. There will be 6 of us in total (4 adults and 2 kids). I don't need flights, but I am looking for a nice vacation rental or villa instead of a regular hotel. We'd prefer something with at least 3 bedrooms and maybe some decent amenities. Also, could you suggest some family-friendly local attractions and a few good places to grab lunch around Ooty?",
-        "Planning a quick business trip from Mumbai to Bangalore arriving on the 15th of next month and leaving on the 17th. I'm looking for business class flights if they aren't insanely expensive, otherwise premium economy works. I also need a 5-star hotel close to Koramangala or Indiranagar. Since I'll have some free time in the evenings, hit me up with some popular brewpubs and highly-rated cafes in that area to check out.",
-        "My 2 friends and I are looking to do a budget trip from Kolkata to Guwahati around the middle of next month for 5 days. Can you find us the absolute cheapest flights possible? We don't mind layovers. For accommodation, we want budget-friendly options, maybe hostels or cheap hotels under 2000 INR per night. What are some must-visit highly-rated local spots and cheap street food areas to explore while we're there?",
-        "I'm already in Jaipur for the weekend and I just want to explore! I don't need any flights or hotels. Can you put together a list of the absolute best places to get authentic Rajasthani thalis? Also, what are the top 3 historical forts or monuments I should visit nearby? I'd love to know what people are saying in the reviews if they are highly rated.",
-        "Hey, it's my anniversary next month and I want to surprise my partner with a luxurious trip from Chennai to Kochi. We want to fly out on a Friday and return on Monday. We are looking for top-tier 5-star hotels or luxury resorts in Kochi, preferably something really highly rated and luxurious. Also, could you find us some romantic fine-dining restaurants and maybe a few quiet, scenic spots or backwater cruise options nearby?",
-    ]
+    examples = load_example_prompts()
     for ex in examples:
         short_label = ex[:72] + "…" if len(ex) > 72 else ex
         if st.button(short_label, key=f"ex_{hash(ex)}", width="stretch", help=ex):
@@ -587,9 +589,16 @@ def _render_route_summary(route_data: dict) -> None:
 chat_container = st.container()
 with chat_container:
     for i, msg in enumerate(st.session_state.messages):
+        # Hide raw tool results and intermediate tool-calling AI messages from UI
+        if isinstance(msg, ToolMessage):
+            continue
+        content = getattr(msg, "text", getattr(msg, "content", ""))
+        tool_calls = getattr(msg, "tool_calls", [])
+        if not content and tool_calls:
+            continue
+
         role = "user" if isinstance(msg, HumanMessage) else "assistant"
         with st.chat_message(role):
-            content = getattr(msg, "text", msg.content)
 
             # If this is an assistant message, render its research traces
             if role == "assistant" and i in st.session_state.traces:
@@ -709,7 +718,6 @@ if user_input:
                     {
                         "messages": st.session_state.messages,
                         "user_location": st.session_state.get("user_location"),
-                        "itinerary": None,
                     },
                 ),
                 stream_mode="updates",
@@ -748,6 +756,7 @@ if user_input:
                                     )
                                     node_tool_calls.append(tc)
                             if msg.content:
+                                _log.log_ai(msg.content)
                                 final_ai_response = msg
 
                         elif isinstance(msg, ToolMessage):
@@ -772,6 +781,8 @@ if user_input:
                                     "parsed": parsed_output,
                                 }
                             )
+                        # Ensure every message is preserved in state!
+                        st.session_state.messages.append(msg)
 
                     # ── Build friendly items for this step ──────────────────────
                     friendly_items: list[dict] = []
@@ -813,7 +824,7 @@ if user_input:
                 if not isinstance(ai_text, str):
                     ai_text = str(ai_text)
 
-                msg_idx = len(st.session_state.messages)
+                msg_idx = st.session_state.messages.index(final_ai_response)
                 st.session_state.traces[msg_idx] = current_traces
 
                 # Render cards if we have structured tool data
@@ -822,14 +833,8 @@ if user_input:
 
                 st.markdown(ai_text)
 
-                # Log the AI's final response
-                _log.log_ai(ai_text)
-
-                st.session_state.messages.append(final_ai_response)
-
                 # Store tool results keyed to the message index for replay
                 if tool_data_list:
-                    msg_idx = len(st.session_state.messages) - 1
                     st.session_state.tool_results[msg_idx] = tool_data_list
 
                 # Save to testing cache

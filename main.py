@@ -1,5 +1,6 @@
 """AI Travel Planner — Rich CLI Interface for testing."""
 from __future__ import annotations
+import argparse
 from collections.abc import Iterable
 from typing import Any, cast
 
@@ -121,8 +122,17 @@ def main() -> None:
     messages: list = []
     last_trace: list = []
 
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="AI Travel Planner CLI")
+    parser.add_argument(
+        "--full-logs",
+        action="store_true",
+        help="Log full tool outputs (default is to hide them)",
+    )
+    args = parser.parse_args()
+
     # Initialize session logger
-    logger = TravelPlannerLogger()
+    logger = TravelPlannerLogger(hide_tool_outputs=not args.full_logs)
 
     print_welcome(console)
     console.print(f"[dim]📝 Session log → {logger.log_path}[/]\n")
@@ -200,7 +210,7 @@ def main() -> None:
         try:
             with console.status("[bold green]✨ Thinking…", spinner="dots") as status:
                 for chunk in graph.stream(
-                    cast(Any, {"messages": messages, "itinerary": None}),
+                    cast(Any, {"messages": messages}),
                     stream_mode="updates",
                 ):
                     for node_name, node_output in chunk.items():
@@ -232,17 +242,19 @@ def main() -> None:
                                         tc.get("name", "unknown"),
                                         tc.get("args"),
                                     )
-                                if msg.text:
-                                    final_ai_content = msg.text
+                                if getattr(msg, "content", ""):
+                                    logger.log_ai(msg.content)
+                                    final_ai_content = str(msg.content)
+                                    
+                            # Append the message to our session history right away
+                            messages.append(msg)
         except Exception:  # noqa
             console.print_exception(show_locals=False)
             continue
 
         # ── Display Response ───────────────────────────────────────────────
         if final_ai_content:
-            logger.log_ai(final_ai_content)
             print_response(console, final_ai_content)
-            messages.append(AIMessage(content=final_ai_content))
         else:
             console.print("[yellow]No response from agent. Try rephrasing.[/]")
 

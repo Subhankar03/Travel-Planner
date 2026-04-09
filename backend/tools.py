@@ -1,17 +1,120 @@
 """SerpAPI-backed tools for the Travel Planner agent."""
 import json
 import os
+import re
 from pathlib import Path
 
+import requests
 import serpapi
+from serpapi.exceptions import HTTPError
 import googlemaps
-from dotenv import load_dotenv
+from typing import Any
+from dotenv import load_dotenv, set_key
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 load_dotenv()
-_client = serpapi.Client(api_key=os.getenv('SERPAPI_KEY'))
+
+_ENV_FILE = Path(__file__).parent.parent / '.env'
+_active_key_num = int(os.getenv('SERPAPI_ACTIVE_KEY', '1'))
+_active_key = os.getenv(f'SERPAPI_KEY_{_active_key_num}') if _active_key_num != 1 else os.getenv('SERPAPI_KEY')
+_client = serpapi.Client(api_key=_active_key)
 _gmaps = googlemaps.Client(key=os.getenv('GOOGLE_MAPS_API_KEY'))
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+_SERPAPI_ERROR_MESSAGES = {
+    400: 'Bad Request — missing or invalid parameter.',
+    401: 'Unauthorized — invalid API key.',
+    403: 'Forbidden — account does not have permission (may be deleted).',
+    404: 'Not Found — requested resource does not exist.',
+    410: 'Gone — search expired and has been deleted from the archive.',
+    429: 'Too Many Requests — rate limit exceeded or account out of searches.',
+    500: 'Server Error — something went wrong on SerpAPI\'s end.',
+    503: 'Server Error — SerpAPI is temporarily unavailable.',
+}
+
+
+class _RateLimitError(Exception):
+    """Internal sentinel raised when SerpAPI returns a 429."""
+    __slots__ = ()
+
+
+def _handle_bad_request(error_msg: str, exc: HTTPError) -> str:
+    """Follow the proxy URL embedded in a 400 response and return its body."""
+    url_match = re.search(r'(https?://[^\s]+)', error_msg)
+    if not url_match:
+        raise ValueError(f'Bad Request: {error_msg}') from exc
+    try:
+        resp = requests.get(url_match.group(1), timeout=10)
+        return resp.text
+    except Exception as req_exc:
+        raise ValueError(f'Bad Request and proxy fetch failed: {req_exc}') from req_exc
+
+
+def _resolve_http_error_label(status: int | None) -> str:
+    """Return a human-readable label for a SerpAPI HTTP status code."""
+    if isinstance(status, int) and status in _SERPAPI_ERROR_MESSAGES:
+        return _SERPAPI_ERROR_MESSAGES[status]
+    if status is not None:
+        return f'HTTP {status} error'
+    return 'Unknown HTTP error'
+
+
+def _do_search(params: dict) -> Any:
+    """Execute a single SerpAPI search, translating HTTP errors."""
+    try:
+        return _client.search(params)
+    except HTTPError as exc:
+        status = getattr(exc, 'status_code', None)
+        error_msg = str(exc)
+
+        if status == 429 or 'Too Many Requests' in error_msg:
+            raise _RateLimitError(error_msg) from exc
+
+        if status == 400 or 'Bad Request' in error_msg:
+            return _handle_bad_request(error_msg, exc)
+
+        label = _resolve_http_error_label(status)
+        raise ValueError(f'SerpAPI {label} — {error_msg}') from exc
+
+
+def _rotate_key_and_retry(params: dict) -> Any:
+    """Switch to SERPAPI_KEY_2 and retry the search once.
+
+    Raises ValueError if no fallback key exists or it is also rate-limited.
+    """
+    global _active_key_num
+
+    if _active_key_num != 1:
+        raise ValueError('SerpAPI rate limit hit and no fallback key is available.')
+
+    key2 = os.getenv('SERPAPI_KEY_2')
+    if not key2:
+        raise ValueError('SerpAPI rate limit hit and no fallback key is available.')
+
+    _client.api_key = key2
+    _active_key_num = 2
+    set_key(_ENV_FILE, 'SERPAPI_ACTIVE_KEY', '2')
+
+    try:
+        return _do_search(params)
+    except _RateLimitError:
+        raise ValueError('SerpAPI rate limit hit on both keys.') from None
+
+
+def _serpapi_search(params: dict) -> Any:
+    """Run a SerpAPI search with full HTTP error handling and key rotation.
+
+    - 429 (Too Many Requests): rotates to SERPAPI_KEY_2 and retries once.
+    - 400 (Bad Request): follows the proxy URL in the error and returns the raw
+      response text so the LLM can reason about what went wrong.
+    - Any other HTTP error: raises a descriptive string.
+    """
+    try:
+        return _do_search(params)
+    except _RateLimitError:
+        return _rotate_key_and_retry(params)
 
 
 # ── Schema Data ────────────────────────────────────────────────────────────────
@@ -147,7 +250,7 @@ class SearchLocalPlacesInput(BaseModel):
         description='What to search for, just like a regular Google Local search (e.g. "best pizza restaurants", "tourist attractions", "coffee shops").'
     )
     location: str = Field(
-        description='Location from which the search should originate. Specify at the city level for best results (e.g. "Bangalore, Karnataka, India", "Paris, France").'
+        description='Location from which the search should originate. Specify at the city level for best results (e.g. "Bangalore,Karnataka,India", "Paris,France").'
     )
     category_label: str = Field(
         default="Places",
@@ -210,8 +313,11 @@ def search_flights(
         params['max_price'] = str(max_price)
     if return_date and trip_type == 1:
         params['return_date'] = return_date
-
-    results = _client.search(params)
+    
+    try:
+        results = _serpapi_search(params)
+    except (HTTPError, ValueError) as e:
+        return f'SerpAPI Error: {e}'
 
     # Extract relevant data
     output: dict = {}
@@ -285,7 +391,10 @@ def search_hotels(
     if bathrooms is not None:
         params['bathrooms'] = str(bathrooms)
 
-    results = _client.search(params)
+    try:
+        results = _serpapi_search(params)
+    except (HTTPError, ValueError) as e:
+        return f'SerpAPI Error: {e}'
 
     # Extract relevant data
     properties = results.get('properties', [])
@@ -313,7 +422,10 @@ def search_local_places(
         'hl': 'en',
     }
 
-    results = _client.search(params)
+    try:
+        results = _serpapi_search(params)
+    except (HTTPError, ValueError) as e:
+        return f'SerpAPI Error: {e}'
 
     local_results = results.get('local_results', [])
     
