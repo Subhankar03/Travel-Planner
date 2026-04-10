@@ -1,15 +1,23 @@
 """AI Travel Planner — Rich CLI Interface for testing."""
+
 from __future__ import annotations
 import argparse
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any, cast
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from prompt_toolkit import PromptSession
+from prompt_toolkit.application import Application
 from prompt_toolkit.completion import Completer, Completion, WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.containers import HSplit
+from prompt_toolkit.layout.dimension import D
+from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
+from prompt_toolkit.widgets import Dialog, Label, RadioList
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -34,6 +42,7 @@ NODE_STYLES = {
 
 COMMANDS = {
     "/help": "Show available commands",
+    "/examples": "Show example travel prompts",
     "/trace": "Show the agent trace for the last query",
     "/clear": "Clear conversation history",
     "/exit": "Exit the CLI (also: /quit)",
@@ -186,6 +195,76 @@ def main() -> None:
         if user_input.lower() == "/help":
             print_help(console)
             continue
+        if user_input.lower() == "/examples":
+            examples_path = Path("backend/prompts/prompt_examples.txt")
+            if examples_path.exists():
+                valid_examples = [
+                    line.strip()
+                    for line in examples_path.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+                ]
+                if not valid_examples:
+                    console.print("[red]No examples found.[/]")
+                    continue
+
+                dialog_style = Style.from_dict(
+                    {
+                        "dialog": "bg:default",
+                        "dialog frame.label": "bg:default fg:white",
+                        "dialog.body": "bg:default fg:white",
+                        "dialog shadow": "bg:default",
+                        "radio-selected": "fg:cyan bold",
+                        "radio-checked": "fg:cyan bold",
+                    }
+                )
+
+                values = [
+                    (ex, ex if len(ex) <= 80 else ex[:77] + "...")
+                    for ex in valid_examples
+                ]
+                
+                radio_list = RadioList(values)
+
+                # Custom dialog without buttons for direct enter/escape support
+                dialog = Dialog(
+                    title="Example Prompts",
+                    body=HSplit(
+                        [
+                            Label(text="Use arrow keys to navigate\nEnter to select, Esc to cancel\n"),
+                            radio_list,
+                        ],
+                        width=D(preferred=80),
+                    ),
+                    with_background=True,
+                )
+
+                kb = KeyBindings()
+
+                @kb.add("enter")
+                def _(event):
+                    event.app.exit(result=radio_list.current_value)
+
+                @kb.add("escape")
+                def _(event):
+                    event.app.exit(result=None)
+
+                app = Application(
+                    layout=Layout(dialog),
+                    key_bindings=kb,
+                    mouse_support=True,
+                    style=dialog_style,
+                    full_screen=True,
+                )
+                selected = app.run()
+
+                if selected:
+                    user_input = selected
+                    console.print(f"\n[bold cyan]Running example:[/] {selected}")
+                else:
+                    continue
+            else:
+                console.print("[red]Examples file not found.[/]")
+                continue
         if user_input.lower() == "/trace":
             if last_trace:
                 console.print(Rule("[dim]Agent Trace[/]", style="dim"))
@@ -245,7 +324,7 @@ def main() -> None:
                                 if getattr(msg, "content", ""):
                                     logger.log_ai(msg.content)
                                     final_ai_content = str(msg.content)
-                                    
+
                             # Append the message to our session history right away
                             messages.append(msg)
         except Exception:  # noqa

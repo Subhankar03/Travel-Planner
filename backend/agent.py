@@ -6,14 +6,16 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
-import os
 import warnings
 
 import requests
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate
-from langchain_nvidia import ChatNVIDIA
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -30,7 +32,7 @@ from backend.tools import (
 )
 
 load_dotenv()
-warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 # ── Load prompts and LLMs
@@ -41,26 +43,18 @@ _checkpointer: MemorySaver | None = None
 supervisor_template = (_PROMPT_DIR / "supervisor.md").read_text(encoding="utf-8")
 booking_template = (_PROMPT_DIR / "booking_agent.md").read_text(encoding="utf-8")
 research_template = (_PROMPT_DIR / "research_agent.md").read_text(encoding="utf-8")
-supported_locations = (_PROMPT_DIR.parent / "serpapi_schemas" / "locations.csv").read_text(encoding="utf-8")
+supported_locations = (
+    _PROMPT_DIR.parent / "serpapi_schemas" / "locations.csv"
+).read_text(encoding="utf-8")
 
 # supervisor_model = ChatNVIDIA(
 #     model='nvidia/nemotron-3-nano-30b-a3b',
 #     api_key=os.getenv('NVIDIA_API_KEY'),
 #     chat_template_kwargs={'enable_thinking': False}
 # )
-supervisor_model = ChatGoogleGenerativeAI(
-    model='gemini-3.1-flash-lite-preview',
-    include_thoughts=True
-)
-# specialist_model = ChatNVIDIA(
-#     model='nvidia/nemotron-3-super-120b-a12b',
-#     api_key=os.getenv('NVIDIA_API_KEY'),
-#     chat_template_kwargs={'enable_thinking': True, 'low_effort': False}
-# )
+supervisor_model = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview")
 specialist_model = ChatGoogleGenerativeAI(
-    model='gemini-3-flash-preview',
-    include_thoughts=True,
-    thinking_level='low'
+    model="gemini-3-flash-preview", thinking_level="low"
 )
 
 
@@ -77,37 +71,43 @@ def get_current_location() -> str:
         city = data.get("city", "Unknown City")
         region = data.get("region", "Unknown Region")
         return f"{city}, {region}"
-    except (requests.RequestException, ValueError):
-        return 'Unknown Location'
+    except requests.RequestException, ValueError:
+        return "Unknown Location"
 
 
 def _prefix_response(response: AIMessage, agent_name: str) -> None:
-    """Prepend an agent-name prefix to the response content in-place."""
-    prefix = f'**{agent_name}:**\n'
-
+    """Wrap the response content with agent identifiers in-place."""
     if not response.content:
         return
 
+    prefix = f"[AGENT: {agent_name}]\n"
+    suffix = "\n[END AGENT]"
+
     if isinstance(response.content, str):
-        response.content = f'{prefix}{response.content}'
+        response.content = f"{prefix}{response.content}{suffix}"
         return
 
     if not isinstance(response.content, list) or not response.content:
         return
 
-    first = response.content[0]
-    if isinstance(first, dict) and first.get('type') == 'text':
-        first['text'] = f'{prefix}{first["text"]}'
+    # Handle list-based content (e.g., multi-modal or block-based)
+    text_parts = [
+        p for p in response.content if isinstance(p, dict) and p.get("type") == "text"
+    ]
+    if text_parts:
+        text_parts[0]["text"] = f"{prefix}{text_parts[0]['text']}"
+        text_parts[-1]["text"] = f"{text_parts[-1]['text']}{suffix}"
 
 
 class SupervisorDecision(BaseModel):
     """The structured decision output for the supervisor."""
+
     route: Literal["booking_agent", "research_agent", "DIRECT_RESPONSE"] = Field(
         description="The next step in the workflow."
     )
     response: str | None = Field(
         default=None,
-        description="If you choose 'DIRECT_RESPONSE', write your response here."
+        description="If you choose 'DIRECT_RESPONSE', write your response here.",
     )
 
 
@@ -121,13 +121,18 @@ def supervisor_node(state: TravelState) -> dict:
         [
             SystemMessagePromptTemplate.from_template(supervisor_template),
             MessagesPlaceholder("messages"),
-            HumanMessage(name='system', content='''**system:**
+            HumanMessage(
+                name="system",
+                content="""**system:**
 Review the conversation and route to the correct agent.
-If all needs are addressed, choose "DIRECT_RESPONSE" and consolidate the information in a user-friendly format.''')
+If all needs are addressed in the user request, choose "DIRECT_RESPONSE" and give your final answer.""",
+            ),
         ]
     )
 
-    supervisor_with_structure = supervisor_model.with_structured_output(SupervisorDecision)
+    supervisor_with_structure = supervisor_model.with_structured_output(
+        SupervisorDecision
+    )
 
     decision = supervisor_with_structure.invoke(
         routing_prompt.invoke(
@@ -138,11 +143,13 @@ If all needs are addressed, choose "DIRECT_RESPONSE" and consolidate the informa
         )
     )
 
-    route = getattr(decision, 'route')
+    route = getattr(decision, "route")
     if route == "DIRECT_RESPONSE":
         return {
             "next": "DIRECT_RESPONSE",
-            "messages": [AIMessage(name='supervisor', content=getattr(decision, 'response', ''))],
+            "messages": [
+                AIMessage(name="supervisor", content=getattr(decision, "response", ""))
+            ],
         }
     return {"next": route}
 
@@ -155,9 +162,12 @@ def booking_agent_node(state: TravelState) -> dict:
         [
             SystemMessagePromptTemplate.from_template(booking_template),
             MessagesPlaceholder("messages"),
-            HumanMessage(name='system', content='''**system:**
+            HumanMessage(
+                name="system",
+                content="""**system:**
 Search for the flights and/or hotels requested. 
-Once you have results, respond directly with a structured summary and recommendation.''')
+Once you have results, respond directly with a structured summary and recommendation.""",
+            ),
         ]
     )
 
@@ -174,23 +184,28 @@ Once you have results, respond directly with a structured summary and recommenda
         )
     )
 
-    _prefix_response(response, 'booking_agent')
-    response.name = 'booking_agent'
+    _prefix_response(response, "booking_agent")
+    response.name = "booking_agent"
 
-    return {'messages': [response]}
+    return {"messages": [response]}
 
 
 def research_agent_node(state: TravelState) -> dict:
     """Research agent: finds local restaurants and attractions, and gets directions."""
-    model_with_tools = specialist_model.bind_tools([search_local_places, get_route_directions])
+    model_with_tools = specialist_model.bind_tools(
+        [search_local_places, get_route_directions]
+    )
 
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(research_template),
             MessagesPlaceholder("messages"),
-            HumanMessage(name='system', content='''**system:**
+            HumanMessage(
+                name="system",
+                content="""**system:**
 Search for the restaurants, attractions, or directions requested. 
-Once you have results, respond directly with a structured summary and recommendation.''')
+Once you have results, respond directly with a structured summary and recommendation.""",
+            ),
         ]
     )
     # Identify user location (from state or IP fallback)
@@ -207,10 +222,10 @@ Once you have results, respond directly with a structured summary and recommenda
         )
     )
 
-    _prefix_response(response, 'research_agent')
-    response.name = 'research_agent'
+    _prefix_response(response, "research_agent")
+    response.name = "research_agent"
 
-    return {'messages': [response]}
+    return {"messages": [response]}
 
 
 # ── Routing Logic ──────────────────────────────────────────────────────────────

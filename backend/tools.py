@@ -61,6 +61,15 @@ def _resolve_http_error_label(status: int | None) -> str:
     return 'Unknown HTTP error'
 
 
+def _to_comma_string(val: list | str) -> str | None:
+    """Convert a value (possibly a list) to a comma-separated string."""
+    if val is None:
+        return None
+    if isinstance(val, list):
+        return ','.join(map(str, val))
+    return str(val)
+
+
 def _do_search(params: dict) -> Any:
     """Execute a single SerpAPI search, translating HTTP errors."""
     try:
@@ -219,7 +228,7 @@ class SearchHotelsInput(BaseModel):
     )
     hotel_class: str | None = Field(
         default=None,
-        description='Hotel star class filter. Single value or comma-separated: "2" = 2-star, "3" = 3-star, "4" = 4-star, "5" = 5-star. Example: "4" or "3,4,5".',
+        description='Hotel star class filter. Single value or comma-separated: "2" = 2-star, "3" = 3-star, "4" = 4-star, "5" = 5-star. Example: must be a string like "4" or "3,4,5".',
     )
     vacation_rentals: bool = Field(
         default=False,
@@ -227,11 +236,11 @@ class SearchHotelsInput(BaseModel):
     )
     property_types: str | None = Field(
         default=None,
-        description=f'Filter by property type. Single code or comma-separated. Hotels: {_HOTEL_PROPERTY_TYPES}. Vacation rentals: {_VR_PROPERTY_TYPES}. Example: "17" or "17,18".',
+        description=f'Filter by property type. single value or comma-separated codes. Available hotels: {_HOTEL_PROPERTY_TYPES}. Available vacation rentals: {_VR_PROPERTY_TYPES}. Example: must be a string like "17" or "11,17,18".',
     )
     amenities: str | None = Field(
         default=None,
-        description=f'Filter by amenities. Single code or comma-separated. Hotels: {_HOTEL_AMENITIES}. Vacation rentals: {_VR_AMENITIES}. Example: "35,7" or "15,32".',
+        description=f'Filter by amenities. single value or comma-separated codes. Available hotels: {_HOTEL_AMENITIES}. Available vacation rentals: {_VR_AMENITIES}. Example: must be a string like "7" or "15,32".',
     )
     bedrooms: int | None = Field(
         default=None,
@@ -316,6 +325,8 @@ def search_flights(
     
     try:
         results = _serpapi_search(params)
+        if isinstance(results, str):
+            return results
     except (HTTPError, ValueError) as e:
         return f'SerpAPI Error: {e}'
 
@@ -379,13 +390,13 @@ def search_hotels(
     if rating is not None:
         params['rating'] = str(rating)
     if hotel_class is not None:
-        params['hotel_class'] = hotel_class
+        params['hotel_class'] = _to_comma_string(hotel_class)
     if vacation_rentals:
         params['vacation_rentals'] = 'true'
     if property_types is not None:
-        params['property_types'] = property_types
+        params['property_types'] = _to_comma_string(property_types)
     if amenities is not None:
-        params['amenities'] = amenities
+        params['amenities'] = _to_comma_string(amenities)
     if bedrooms is not None:
         params['bedrooms'] = str(bedrooms)
     if bathrooms is not None:
@@ -393,6 +404,8 @@ def search_hotels(
 
     try:
         results = _serpapi_search(params)
+        if isinstance(results, str):
+            return results
     except (HTTPError, ValueError) as e:
         return f'SerpAPI Error: {e}'
 
@@ -424,6 +437,8 @@ def search_local_places(
 
     try:
         results = _serpapi_search(params)
+        if isinstance(results, str):
+            return results
     except (HTTPError, ValueError) as e:
         return f'SerpAPI Error: {e}'
 
