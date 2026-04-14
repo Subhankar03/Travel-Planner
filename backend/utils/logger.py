@@ -35,6 +35,9 @@ _LOG_RETENTION_DAYS = 7
 # Tag column width — "TOOL OUTPUT" is the widest at 11 chars
 _TAG_WIDTH = 11
 
+# Total width for visual separators/banners in the log file
+_BANNER_WIDTH = 80
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def _now() -> str:
@@ -58,15 +61,12 @@ def _serialize(obj: Any) -> str:
 
 
 def _session_banner(label: str) -> str:
-    """Build a compact session-boundary banner line.
-
-    Example output:
-        ────── Session Started ──────
-    """
+    """Build a centered session-boundary banner line."""
     text = f' {label} '
-    dash_count = max(0, (54 - len(text)) // 2)
-    dashes = '─' * dash_count
-    return f'{dashes}{text}{dashes}'
+    total_dashes = max(0, _BANNER_WIDTH - len(text))
+    left_dashes = total_dashes // 2
+    right_dashes = total_dashes - left_dashes
+    return f'{"─" * left_dashes}{text}{"─" * right_dashes}'
 
 
 # ── Purge Utility ──────────────────────────────────────────────────────────────
@@ -218,9 +218,13 @@ class TravelPlannerLogger:
     def log_separator(self, label: str = '') -> None:
         """Write a visual turn separator (e.g. between conversation turns)."""
         if label:
-            line = f'  ── {label} ' + '─' * max(0, 68 - len(label))
+            text = f' {label} '
+            total_dashes = max(0, _BANNER_WIDTH - len(text))
+            left_dashes = total_dashes // 2
+            right_dashes = total_dashes - left_dashes
+            line = f'{"─" * left_dashes}{text}{"─" * right_dashes}'
         else:
-            line = '─' * 80
+            line = '─' * _BANNER_WIDTH
         self._logger.info(line)
 
     def close(self) -> None:

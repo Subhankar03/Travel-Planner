@@ -420,7 +420,7 @@ def search_hotels(
 def search_local_places(
     query: str,
     location: str,
-    category_label: str = "Places",
+    category_label: str = 'Places',
 ) -> str:
     """Search for local places (restaurants, attractions, etc.) via Google Local.
 
@@ -501,7 +501,7 @@ def get_route_directions(
 def _summarise_flights(flight_groups: list[dict]) -> list[dict]:
     """Extract the most useful fields from a list of flight groups."""
     summaries = []
-    for group in flight_groups:
+    for group in flight_groups[:10]:
         legs = []
         for leg in group.get('flights', []):
             legs.append({

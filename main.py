@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import argparse
+import json
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, cast
@@ -18,10 +19,13 @@ from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Dialog, Label, RadioList
-from rich.console import Console
+from rich.console import Console, Group
+from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
+from rich.spinner import Spinner
+from rich.table import Table
 from rich.text import Text
 from rich.traceback import install
 
@@ -286,17 +290,56 @@ def main() -> None:
         final_ai_content: str | None = None
         last_trace.clear()
 
+        # ── Live working display ───────────────────────────────────────────
+        # Tracks all task lines emitted by agents during this turn.
+        all_tasks: list[tuple[str, str]] = []  # (agent_label, task_text)
+
+        def _build_live_renderable() -> Group:
+            """Build the composite renderable: spinner header + task table."""
+            spinner = Spinner('dots', text=Text.assemble(
+                ('Working', 'bold green'),
+            ))
+            if not all_tasks:
+                return Group(spinner)
+
+            table = Table.grid(padding=(0, 1))
+            table.add_column()                                  # task text
+            for _, task_text in all_tasks:
+                table.add_row(
+                    Text.assemble(('  🔍 ', 'bold yellow'), (task_text, 'white')),
+                )
+            return Group(spinner, table)
+
+        def _build_done_renderable() -> Panel:
+            """Build a static summary panel shown after research completes."""
+            table = Table.grid(padding=(0, 1))
+            table.add_column()
+            for _, task_text in all_tasks:
+                table.add_row(
+                    Text.assemble(('  ✓ ', 'bold green'), (task_text, 'white')),
+                )
+            return Panel(
+                table,
+                title='[bold green]✓ Research Complete[/]',
+                border_style='green',
+                padding=(0, 1),
+            )
+
+
+
         try:
-            with console.status("[bold green]✨ Thinking…", spinner="dots") as status:
+            with Live(
+                _build_live_renderable(),
+                console=console,
+                refresh_per_second=12,
+                transient=True,   # erased on stop; we print the static panel ourselves
+            ) as live:
                 for chunk in graph.stream(
                     cast(Any, {"messages": messages}),
                     stream_mode="updates",
                 ):
                     for node_name, node_output in chunk.items():
-                        # Update status to show what node is running
-                        status.update(
-                            f"[bold green]✨ Thinking…[/] [dim](Current: {node_name})[/]"
-                        )
+                        live.update(_build_live_renderable())
 
                         # Log node execution
                         logger.log_node(node_name)
@@ -315,21 +358,72 @@ def main() -> None:
                                 logger.log_tool_output(msg.name or "tool", msg.content)
                                 last_trace.append(format_tool_result(msg))
                             elif isinstance(msg, AIMessage):
+                                raw_content = getattr(msg, 'content', '') or ''
+                                # Normalize: content can be a list of typed blocks
+                                # (e.g. [{"type": "text", "text": "..."}]) when the
+                                # model generates tool calls alongside text.
+                                if isinstance(raw_content, list):
+                                    parts = []
+                                    for block in raw_content:
+                                        if isinstance(block, dict) and block.get('type') == 'text':
+                                            parts.append(block.get('text', ''))
+                                        elif isinstance(block, str):
+                                            parts.append(block)
+                                    content_str = '\n'.join(parts)
+                                else:
+                                    content_str = str(raw_content)
+                                if content_str:
+                                    logger.log_ai(content_str)
+                                    final_ai_content = content_str
+
+                                    # ── Parse agent signal JSON for tasks ──
+                                    # The model emits one or more JSON blobs in its
+                                    # content; try to extract them.
+                                    raw = content_str.strip()
+                                    # Handle case where model concatenates multiple
+                                    # JSON objects in one content string (seen in logs)
+                                    decoder = json.JSONDecoder()
+                                    idx = 0
+                                    while idx < len(raw):
+                                        start = raw.find('{', idx)
+                                        if start == -1:
+                                            break
+                                        try:
+                                            signal, end = decoder.raw_decode(raw, start)
+                                            if (
+                                                isinstance(signal, dict)
+                                                and 'agent' in signal
+                                                and 'tasks' in signal
+                                                and isinstance(signal['tasks'], list)
+                                                # Only capture the first/planning signal
+                                                # (not the "status: done" one)
+                                                and signal.get('status') != 'done'
+                                            ):
+                                                agent_label = signal['agent'].replace('_', ' ').title()
+                                                for task in signal['tasks']:
+                                                    all_tasks.append((agent_label, str(task)))
+                                                live.update(_build_live_renderable())
+                                            idx = end
+                                        except (json.JSONDecodeError, ValueError):
+                                            idx = start + 1
+
                                 # Log tool calls embedded in the AIMessage (if any)
                                 for tc in getattr(msg, "tool_calls", []) or []:
                                     logger.log_tool_call(
                                         tc.get("name", "unknown"),
                                         tc.get("args"),
                                     )
-                                if getattr(msg, "content", ""):
-                                    logger.log_ai(msg.content)
-                                    final_ai_content = str(msg.content)
 
                             # Append the message to our session history right away
                             messages.append(msg)
         except Exception:  # noqa
             console.print_exception(show_locals=False)
             continue
+
+        # ── Print static task summary (persists after spinner is gone) ─────
+        if all_tasks:
+            console.print(_build_done_renderable())
+            console.print()
 
         # ── Display Response ───────────────────────────────────────────────
         if final_ai_content:

@@ -35,7 +35,7 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-# ── Load prompts and LLMs
+# ── Load prompts and LLMs ──────────────────────────────────────────────────────
 _PROMPT_DIR = Path(__file__).parent / "prompts"
 _compiled_graph: CompiledStateGraph | None = None
 _checkpointer: MemorySaver | None = None
@@ -47,11 +47,6 @@ supported_locations = (
     _PROMPT_DIR.parent / "serpapi_schemas" / "locations.csv"
 ).read_text(encoding="utf-8")
 
-# supervisor_model = ChatNVIDIA(
-#     model='nvidia/nemotron-3-nano-30b-a3b',
-#     api_key=os.getenv('NVIDIA_API_KEY'),
-#     chat_template_kwargs={'enable_thinking': False}
-# )
 supervisor_model = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview")
 specialist_model = ChatGoogleGenerativeAI(
     model="gemini-3-flash-preview", thinking_level="low"
@@ -75,30 +70,6 @@ def get_current_location() -> str:
         return "Unknown Location"
 
 
-def _prefix_response(response: AIMessage, agent_name: str) -> None:
-    """Wrap the response content with agent identifiers in-place."""
-    if not response.content:
-        return
-
-    prefix = f"[AGENT: {agent_name}]\n"
-    suffix = "\n[END AGENT]"
-
-    if isinstance(response.content, str):
-        response.content = f"{prefix}{response.content}{suffix}"
-        return
-
-    if not isinstance(response.content, list) or not response.content:
-        return
-
-    # Handle list-based content (e.g., multi-modal or block-based)
-    text_parts = [
-        p for p in response.content if isinstance(p, dict) and p.get("type") == "text"
-    ]
-    if text_parts:
-        text_parts[0]["text"] = f"{prefix}{text_parts[0]['text']}"
-        text_parts[-1]["text"] = f"{text_parts[-1]['text']}{suffix}"
-
-
 class SupervisorDecision(BaseModel):
     """The structured decision output for the supervisor."""
 
@@ -114,7 +85,6 @@ class SupervisorDecision(BaseModel):
 def supervisor_node(state: TravelState) -> dict:
     """Supervisor decides which specialist agent should handle the request."""
 
-    # Identify user location (from state or IP fallback)
     location = state.get("user_location") or get_current_location()
 
     routing_prompt = ChatPromptTemplate.from_messages(
@@ -124,17 +94,13 @@ def supervisor_node(state: TravelState) -> dict:
             HumanMessage(
                 name="system",
                 content="""**system:**
-Review the conversation and route to the correct agent.
-If all needs are addressed in the user request, choose "DIRECT_RESPONSE" and give your final answer.""",
+Review the conversation and the specialist agent's signal (if any).
+Route to the next agent if work remains, or choose DIRECT_RESPONSE to consolidate and present results to the user.""",
             ),
         ]
     )
 
-    supervisor_with_structure = supervisor_model.with_structured_output(
-        SupervisorDecision
-    )
-
-    decision = supervisor_with_structure.invoke(
+    decision = supervisor_model.with_structured_output(SupervisorDecision).invoke(
         routing_prompt.invoke(
             {
                 "messages": state["messages"],
@@ -156,8 +122,6 @@ If all needs are addressed in the user request, choose "DIRECT_RESPONSE" and giv
 
 def booking_agent_node(state: TravelState) -> dict:
     """Booking agent: finds flights and hotels."""
-    model_with_tools = specialist_model.bind_tools([search_flights, search_hotels])
-
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(booking_template),
@@ -165,16 +129,15 @@ def booking_agent_node(state: TravelState) -> dict:
             HumanMessage(
                 name="system",
                 content="""**system:**
-Search for the flights and/or hotels requested. 
-Once you have results, respond directly with a structured summary and recommendation.""",
+Search for the flights and/or hotels requested.
+When done, output your signal JSON.""",
             ),
         ]
     )
 
-    # Identify user location (from state or IP fallback)
     location = state.get("user_location") or get_current_location()
 
-    response = model_with_tools.invoke(
+    response = specialist_model.bind_tools([search_flights, search_hotels]).invoke(
         prompt.invoke(
             {
                 "today": datetime.now().strftime("%A, %Y-%m-%d"),
@@ -184,18 +147,12 @@ Once you have results, respond directly with a structured summary and recommenda
         )
     )
 
-    _prefix_response(response, "booking_agent")
     response.name = "booking_agent"
-
     return {"messages": [response]}
 
 
 def research_agent_node(state: TravelState) -> dict:
     """Research agent: finds local restaurants and attractions, and gets directions."""
-    model_with_tools = specialist_model.bind_tools(
-        [search_local_places, get_route_directions]
-    )
-
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(research_template),
@@ -203,15 +160,15 @@ def research_agent_node(state: TravelState) -> dict:
             HumanMessage(
                 name="system",
                 content="""**system:**
-Search for the restaurants, attractions, or directions requested. 
-Once you have results, respond directly with a structured summary and recommendation.""",
+Search for the restaurants, attractions, or directions requested.
+When done, output your signal JSON.""",
             ),
         ]
     )
-    # Identify user location (from state or IP fallback)
+
     location = state.get("user_location") or get_current_location()
 
-    response = model_with_tools.invoke(
+    response = specialist_model.bind_tools([search_local_places, get_route_directions]).invoke(
         prompt.invoke(
             {
                 "today": datetime.now().strftime("%A, %Y-%m-%d"),
@@ -222,9 +179,7 @@ Once you have results, respond directly with a structured summary and recommenda
         )
     )
 
-    _prefix_response(response, "research_agent")
     response.name = "research_agent"
-
     return {"messages": [response]}
 
 
@@ -243,12 +198,11 @@ def route_agent_tools(
     """Check if the last message has tool calls; if so route to the correct ToolNode."""
     last_message = state["messages"][-1]
     if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        # Determine which tool node based on the tool name
         tool_names = {tc["name"] for tc in last_message.tool_calls}
         if "search_local_places" in tool_names or "get_route_directions" in tool_names:
             return "research_tools"
         return "booking_tools"
-    # No tool calls → go back to supervisor
+    # No tool calls → signal is ready, pass back to supervisor
     return "supervisor"
 
 
@@ -281,7 +235,7 @@ def build_graph(checkpointer: MemorySaver | None = None) -> CompiledStateGraph:
         },
     )
 
-    # Each agent either calls tools or returns to supervisor
+    # Each agent either calls tools or returns to supervisor with signal
     graph.add_conditional_edges(
         "booking_agent",
         route_agent_tools,

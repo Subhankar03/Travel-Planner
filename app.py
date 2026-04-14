@@ -747,6 +747,10 @@ if user_input:
 
                     for msg in node_messages:
                         if isinstance(msg, AIMessage):
+                            if msg.content:
+                                _log.log_ai(msg.content)
+                                final_ai_response = msg
+
                             for tc in getattr(msg, "tool_calls", []) or []:
                                 tc_id = tc.get("id", "")
                                 if tc_id not in _seen_tool_ids:
@@ -755,9 +759,6 @@ if user_input:
                                         tc.get("name", "unknown"), tc.get("args")
                                     )
                                     node_tool_calls.append(tc)
-                            if msg.content:
-                                _log.log_ai(msg.content)
-                                final_ai_response = msg
 
                         elif isinstance(msg, ToolMessage):
                             _log.log_tool_output(msg.name or "tool", msg.content)
