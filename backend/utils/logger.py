@@ -176,7 +176,10 @@ class TravelPlannerLogger:
     # ── Public API ─────────────────────────────────────────────────────────────
     def log_user(self, content: str) -> None:
         """Log a message sent by the user."""
-        self._entry('USER', content)
+        text = content.strip()
+        if text:
+            indented_text = text.replace('\n', '\n' + ' ' * 34)
+            self._entry('USER', indented_text)
 
     def log_ai(self, content: Any) -> None:
         """Log a final AI response, extracting text from blocks if necessary."""
@@ -195,9 +198,14 @@ class TravelPlannerLogger:
         else:
             text = str(content)
 
-        single_line = ' '.join(text.split())
-        self._entry('AI', single_line)
-
+        text = text.strip()
+        if not text:
+            return
+            
+        # Align multi-line output with the log prefix 
+        # (21 chars for timestamp + 1 space + 10 chars for tag + 2 chars for ": " = 34 columns)
+        indented_text = text.replace('\n', '\n' + ' ' * 34)
+        self._entry('AI', indented_text)
     def log_tool_call(self, tool_name: str, args: dict[str, Any] | None = None) -> None:
         """Log an outgoing tool invocation with its arguments."""
         args_str = _serialize(args or {})
