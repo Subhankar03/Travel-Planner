@@ -49,7 +49,7 @@ supported_locations = (
 
 supervisor_model = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview")
 specialist_model = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview", thinking_level="low"
+    model="gemini-3-flash-preview", thinking_level="medium"
 )
 
 

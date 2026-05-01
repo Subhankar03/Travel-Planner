@@ -24,6 +24,7 @@ dependencies = [
     "streamlit-folium>=0.27.1",
     "langchain-nvidia-ai-endpoints>=1.2.1",
     "ruff==0.15.10",
+    "langchain-moonshot>=0.1.0",
 ]
 
 [dependency-groups]

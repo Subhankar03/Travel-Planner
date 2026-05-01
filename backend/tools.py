@@ -16,8 +16,32 @@ from pydantic import BaseModel, Field
 load_dotenv()
 
 _ENV_FILE = Path(__file__).parent.parent / '.env'
+
+def _get_all_serpapi_keys() -> list[str]:
+    """Collect all SerpAPI keys from the environment."""
+    keys = []
+    # Check for SERPAPI_KEY (the primary/first key)
+    primary = os.getenv('SERPAPI_KEY')
+    if primary:
+        keys.append(primary)
+    
+    # Check for SERPAPI_KEY_2, SERPAPI_KEY_3, etc.
+    i = 2
+    while True:
+        key = os.getenv(f'SERPAPI_KEY_{i}')
+        if not key:
+            break
+        keys.append(key)
+        i += 1
+    return keys
+
+_all_keys = _get_all_serpapi_keys()
 _active_key_num = int(os.getenv('SERPAPI_ACTIVE_KEY', '1'))
-_active_key = os.getenv(f'SERPAPI_KEY_{_active_key_num}') if _active_key_num != 1 else os.getenv('SERPAPI_KEY')
+# Ensure _active_key_num is within bounds
+if _active_key_num > len(_all_keys) or _active_key_num < 1:
+    _active_key_num = 1
+
+_active_key = _all_keys[_active_key_num - 1] if _all_keys else None
 _client = serpapi.Client(api_key=_active_key)
 _gmaps = googlemaps.Client(key=os.getenv('GOOGLE_MAPS_API_KEY'))
 
@@ -89,27 +113,34 @@ def _do_search(params: dict) -> Any:
 
 
 def _rotate_key_and_retry(params: dict) -> Any:
-    """Switch to SERPAPI_KEY_2 and retry the search once.
+    """Switch to the next available SerpAPI key and retry.
 
-    Raises ValueError if no fallback key exists or it is also rate-limited.
+    Tries all keys in the pool until one works or all are exhausted.
     """
-    global _active_key_num
+    global _active_key_num, _active_key
 
-    if _active_key_num != 1:
-        raise ValueError('SerpAPI rate limit hit and no fallback key is available.')
+    if not _all_keys:
+        raise ValueError('No SerpAPI keys configured.')
 
-    key2 = os.getenv('SERPAPI_KEY_2')
-    if not key2:
-        raise ValueError('SerpAPI rate limit hit and no fallback key is available.')
+    # Try all remaining keys
+    initial_num = _active_key_num
+    
+    while True:
+        # Move to next key (cycle back to 1 if at the end)
+        _active_key_num = (_active_key_num % len(_all_keys)) + 1
+        
+        # If we've circled back to the starting key, we've exhausted all options
+        if _active_key_num == initial_num:
+            raise ValueError(f'SerpAPI rate limit hit on all {len(_all_keys)} configured keys.')
 
-    _client.api_key = key2
-    _active_key_num = 2
-    set_key(_ENV_FILE, 'SERPAPI_ACTIVE_KEY', '2')
+        _active_key = _all_keys[_active_key_num - 1]
+        _client.api_key = _active_key
+        set_key(_ENV_FILE, 'SERPAPI_ACTIVE_KEY', str(_active_key_num))
 
-    try:
-        return _do_search(params)
-    except _RateLimitError:
-        raise ValueError('SerpAPI rate limit hit on both keys.') from None
+        try:
+            return _do_search(params)
+        except _RateLimitError:
+            continue
 
 
 def _serpapi_search(params: dict) -> Any:
